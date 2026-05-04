@@ -654,15 +654,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <span style="color:var(--text2)">🔍</span>
         <input type="text" placeholder="Rechercher dans la base…" id="modalSearch" oninput="renderModalSearchHybrid()">
       </div>
-      <div id="modalResults" style="max-height:260px;overflow-y:auto"></div>
-      <div id="qtyBlock" style="display:none;margin-top:12px">
-        <div class="form-group">
-          <label class="form-label" id="qtyLabel">Quantité (g)</label>
-          <input type="number" class="form-input" id="foodQty" value="100" min="0.5" step="10" oninput="updateQtyPreview()">
-        </div>
-        <div class="qty-preview" id="qtyPreview"></div>
-        <button class="btn btn-primary" onclick="confirmAdd()">✅ Ajouter au repas</button>
-      </div>
+      <div id="modalResults" style="max-height:220px;overflow-y:auto"></div>
     </div>
     <!-- ═══ ONGLET OPEN FOOD FACTS ═══ -->
     <div class="tab-content" id="toff">
@@ -682,20 +674,41 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <div id="scanResult"></div>
       </div>
     </div>
+    <!-- ═══ BLOC QUANTITÉ — commun à tous les onglets ═══ -->
+    <div id="qtyBlock" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+      <div class="form-group">
+        <label class="form-label" id="qtyLabel">Quantité (g)</label>
+        <input type="number" class="form-input" id="foodQty" value="100" min="0.5" step="10" oninput="updateQtyPreview()">
+      </div>
+      <div class="qty-preview" id="qtyPreview"></div>
+      <button class="btn btn-primary" onclick="confirmAdd()">✅ Ajouter au repas</button>
+    </div>
     <div class="tab-content" id="tmanual">
       <div class="form-group">
         <label class="form-label">Nom</label>
         <input type="text" class="form-input" id="mName" placeholder="Ex : Poulet grillé">
       </div>
-      <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Type de mesure</label>
+        <select class="form-select" id="mUnitType" onchange="updateManualUnitType()">
+          <option value="g">Grammes (g)</option>
+          <option value="ml">Millilitres (ml)</option>
+          <option value="unit">À l'unité (œuf, tranche…)</option>
+        </select>
+      </div>
+      <div class="form-row" id="mQtyRow">
         <div class="form-group">
           <label class="form-label">Calories</label>
           <input type="number" class="form-input" id="mCal" placeholder="0">
         </div>
         <div class="form-group">
-          <label class="form-label">Quantité (g)</label>
+          <label class="form-label" id="mQtyLabel">Quantité (g)</label>
           <input type="number" class="form-input" id="mQty" placeholder="100">
         </div>
+      </div>
+      <div class="form-group" id="mCalUnitRow" style="display:none">
+        <label class="form-label">Calories (pour 1 unité)</label>
+        <input type="number" class="form-input" id="mCalUnit" placeholder="0">
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -711,6 +724,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <label class="form-label">Lipides (g)</label>
         <input type="number" class="form-input" id="mFat" placeholder="0">
       </div>
+      <p id="mHint" style="font-size:12px;color:var(--text2);margin-bottom:10px">Macros pour la quantité indiquée — l'aliment sera sauvegardé dans ta base.</p>
       <button class="btn btn-primary" onclick="addManual()">✅ Ajouter</button>
     </div>
     <button class="btn btn-ghost" onclick="closeModal('mealModal')">Annuler</button>
@@ -1940,16 +1954,76 @@ function confirmAdd(){
   showToast('✅ '+pickedFood.name+' ajouté');
 }
 
+function updateManualUnitType(){
+  const t=document.getElementById('mUnitType').value;
+  const qrow=document.getElementById('mQtyRow');
+  const qlbl=document.getElementById('mQtyLabel');
+  const curow=document.getElementById('mCalUnitRow');
+  const hint=document.getElementById('mHint');
+  if(t==='g'){
+    qrow.style.display=''; curow.style.display='none';
+    qlbl.textContent='Quantité (g)';
+    document.getElementById('mQty').placeholder='100';
+    hint.textContent="Macros pour la quantité indiquée — l'aliment sera sauvegardé dans ta base.";
+  } else if(t==='ml'){
+    qrow.style.display=''; curow.style.display='none';
+    qlbl.textContent='Quantité (ml)';
+    document.getElementById('mQty').placeholder='100';
+    hint.textContent="Macros pour la quantité indiquée — l'aliment sera sauvegardé dans ta base.";
+  } else {
+    qrow.style.display='none'; curow.style.display='';
+    hint.textContent="Macros pour 1 unité — l'aliment sera sauvegardé dans ta base.";
+  }
+}
+
 function addManual(){
   const name=document.getElementById('mName').value.trim();
-  const cal=parseFloat(document.getElementById('mCal').value)||0;
-  const qty=document.getElementById('mQty').value||'100';
+  const utype=document.getElementById('mUnitType').value;
   const prot=parseFloat(document.getElementById('mProt').value)||0;
   const carb=parseFloat(document.getElementById('mCarb').value)||0;
   const fat=parseFloat(document.getElementById('mFat').value)||0;
-  if(!name||!cal){ showToast('⚠️ Nom et calories requis'); return; }
-  getLog(currentDate).items.push({meal:currentMealId,name,qty:qty+'g',cal,prot,carb,fat});
-  saveLogs(); closeModal('mealModal'); renderToday(); showToast('✅ '+name+' ajouté');
+  if(!name){ showToast('⚠️ Nom requis'); return; }
+
+  let qtyLabel, unit, base, calLog, calStore, protStore, carbStore, fatStore;
+
+  if(utype==='unit'){
+    calLog=parseFloat(document.getElementById('mCalUnit').value)||0;
+    if(!calLog){ showToast('⚠️ Calories requises'); return; }
+    qtyLabel='1 unité'; unit='unité'; base=1;
+    calStore=calLog; protStore=prot; carbStore=carb; fatStore=fat;
+  } else {
+    calLog=parseFloat(document.getElementById('mCal').value)||0;
+    const qty=parseFloat(document.getElementById('mQty').value)||100;
+    if(!calLog){ showToast('⚠️ Calories requises'); return; }
+    unit=utype; base=100;
+    qtyLabel=`${qty}${unit}`;
+    // normalise en valeurs pour 100g ou 100ml pour la base
+    calStore=Math.round(calLog/qty*1000)/10;
+    protStore=Math.round(prot/qty*1000)/10;
+    carbStore=Math.round(carb/qty*1000)/10;
+    fatStore=Math.round(fat/qty*1000)/10;
+  }
+
+  // Ajout au journal avec les macros réelles saisies
+  getLog(currentDate).items.push({meal:currentMealId,name,qty:qtyLabel,cal:calLog,prot,carb,fat});
+  saveLogs();
+
+  // Sauvegarde dans la base locale (normalisé) si inconnu
+  const already=allFoods().some(f=>f.name.toLowerCase()===name.toLowerCase());
+  if(!already){
+    customFoods.push({name,cat:'Mes aliments',cal:calStore,prot:protStore,carb:carbStore,fat:fatStore,unit,base});
+    localStorage.setItem('zth3_custom',JSON.stringify(customFoods));
+  }
+
+  // Réinitialiser le formulaire
+  ['mName','mCal','mCalUnit','mQty','mProt','mCarb','mFat'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('mUnitType').value='g';
+  updateManualUnitType();
+
+  closeModal('mealModal'); renderToday();
+  showToast('✅ '+name+(already?' ajouté':' ajouté et sauvegardé en base'));
 }
 
 // ── OPEN FOOD FACTS ──
@@ -1963,7 +2037,7 @@ function searchOFF(){
   c.innerHTML='<div class="off-spinner">Recherche en cours…</div>';
   offTimeout=setTimeout(async()=>{
     try{
-      const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=true&fields=product_name,nutriments,code&page_size=15&lc=fr&cc=fr`;
+      const url=`https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(q)}&json=1&pageNumber=1&pageSize=30&lc=fr&countries_tags=en:france`;
       const r=await fetch(url);
       const data=await r.json();
       const prods=(data.products||[]).filter(p=>
