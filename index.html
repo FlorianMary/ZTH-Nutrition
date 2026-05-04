@@ -256,6 +256,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .empty-icon{font-size:36px;margin-bottom:8px}
 .empty-text{font-size:14px;font-weight:600;margin-bottom:4px}
 .empty-sub{font-size:12px}
+/* ══ OPEN FOOD FACTS ══ */
+.off-spinner{display:flex;align-items:center;justify-content:center;padding:20px;gap:10px;color:var(--text2);font-size:13px}
+.off-spinner::before{content:'';width:18px;height:18px;border:2.5px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.off-result-found{background:var(--primary-soft);border-radius:12px;padding:11px 13px;margin-bottom:8px;font-size:12px;color:var(--primary-dark);font-weight:600;line-height:1.6}
+/* ══ SCANNER ══ */
+.scanner-wrap{text-align:center;padding:12px 0}
+.scanner-box{border-radius:14px;overflow:hidden;background:#000;width:100%;aspect-ratio:1;display:none;position:relative;margin-bottom:10px}
+.scanner-hint{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -632,8 +641,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="mealModalTitle">Ajouter un aliment</div>
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('tsearch',this)">🔍 Recherche</button>
+    <div class="tabs" style="flex-wrap:wrap;gap:3px">
+      <button class="tab active" onclick="switchTab('tsearch',this)">🔍 Ma base</button>
+      <button class="tab" onclick="switchTab('toff',this)">🌐 En ligne</button>
+      <button class="tab" onclick="switchTab('tscan',this)">📷 Scanner</button>
       <button class="tab" onclick="switchTab('tmanual',this)">✏️ Manuel</button>
     </div>
     <div class="tab-content active" id="tsearch">
@@ -651,6 +662,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         </div>
         <div class="qty-preview" id="qtyPreview"></div>
         <button class="btn btn-primary" onclick="confirmAdd()">✅ Ajouter au repas</button>
+      </div>
+    </div>
+    <!-- ═══ ONGLET OPEN FOOD FACTS ═══ -->
+    <div class="tab-content" id="toff">
+      <div class="search-bar">
+        <span style="color:var(--text2)">🌐</span>
+        <input type="text" placeholder="Rechercher un produit en ligne…" id="offSearch" oninput="searchOFF()">
+      </div>
+      <div id="offResults"><div class="empty-meal">Tape un aliment pour chercher parmi 2 millions de produits</div></div>
+    </div>
+    <!-- ═══ ONGLET SCANNER ═══ -->
+    <div class="tab-content" id="tscan">
+      <div class="scanner-wrap">
+        <p class="scanner-hint">Scanne le code-barres d'un produit.<br>Les infos nutritionnelles s'affichent automatiquement.</p>
+        <div class="scanner-box" id="scannerBox"></div>
+        <button class="btn btn-primary" id="startScanBtn" onclick="startScanner()">📷 Lancer le scanner</button>
+        <button class="btn btn-ghost" id="stopScanBtn" style="display:none" onclick="stopScanner()">⏹ Arrêter le scanner</button>
+        <div id="scanResult"></div>
       </div>
     </div>
     <div class="tab-content" id="tmanual">
@@ -726,10 +755,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <select class="form-select" id="dbCat">
         <option>Féculents</option><option>Protéines</option><option>Légumes</option>
         <option>Fruits</option><option>Produits laitiers</option><option>Oléagineux</option>
-        <option>Matières grasses</option><option>Sauces</option><option>Dessert / Sucré</option><option>Autres</option>
+        <option>Matières grasses</option><option>Sauces & Condiments</option><option>Sucré</option><option>Boissons</option><option>Plats préparés</option><option>Mes aliments</option>
       </select>
     </div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Valeurs pour 100 g</p>
+    <div class="form-group">
+      <label class="form-label">Type de portion</label>
+      <select class="form-select" id="dbUnitType" onchange="updateDbUnitLabel()">
+        <option value="100g">Pour 100 g (solide)</option>
+        <option value="100ml">Pour 100 ml (liquide)</option>
+        <option value="unit">Par unité (ex : 1 pomme, 1 œuf)</option>
+      </select>
+    </div>
+    <div id="dbUnitNameRow" style="display:none" class="form-group">
+      <label class="form-label">Nom de l'unité</label>
+      <input type="text" class="form-input" id="dbUnitName" placeholder="Ex : pomme, œuf, tranche…">
+    </div>
+    <p id="dbUnitHint" style="font-size:12px;color:var(--text2);margin-bottom:8px">Valeurs pour 100 g</p>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Calories</label><input type="number" class="form-input" id="dbCal" placeholder="0"></div>
       <div class="form-group"><label class="form-label">Protéines (g)</label><input type="number" class="form-input" id="dbProt" placeholder="0"></div>
@@ -814,6 +855,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="confetti-wrap" id="confettiWrap"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 const FOOD_DB=[
   {name:'Allumettes au four',cat:'Féculents',cal:161,carb:26.0,prot:2.5,fat:4.5,unit:'g',base:100},
@@ -833,7 +875,7 @@ const FOOD_DB=[
   {name:'Pain de mie',cat:'Féculents',cal:95,carb:16.0,prot:4.1,fat:1.1,unit:'tranche',base:1},
   {name:'Pain multicéréales',cat:'Féculents',cal:255,carb:39.0,prot:8.8,fat:5.5,unit:'g',base:100},
   {name:'Patates douces',cat:'Féculents',cal:86,carb:20.0,prot:1.6,fat:0.1,unit:'g',base:100},
-  {name:'Pâtes HP Carrefour',cat:'Féculents',cal:346,carb:61.0,prot:21.0,fat:1.4,unit:'g',base:100},
+  {name:'Pâtes protéinées',cat:'Féculents',cal:346,carb:61.0,prot:21.0,fat:1.4,unit:'g',base:100},
   {name:'Penne rigatoni',cat:'Féculents',cal:347,carb:64.0,prot:13.0,fat:2.5,unit:'g',base:100},
   {name:'Pois chiches',cat:'Féculents',cal:123,carb:16.0,prot:7.0,fat:2.1,unit:'g',base:100},
   {name:'Pomme de terre',cat:'Féculents',cal:77,carb:17.0,prot:2.0,fat:0.1,unit:'g',base:100},
@@ -874,7 +916,7 @@ const FOOD_DB=[
   {name:'Cottage cheese',cat:'Produits laitiers',cal:88,carb:2.9,prot:12.0,fat:3.2,unit:'g',base:100},
   {name:'Crème liquide allégée 4%',cat:'Produits laitiers',cal:76,carb:6.3,prot:2.9,fat:4.3,unit:'ml',base:100},
   {name:'Emmental râpé',cat:'Produits laitiers',cal:372,carb:0.0,prot:27.0,fat:29.0,unit:'g',base:100},
-  {name:'Fromage blanc Danone',cat:'Produits laitiers',cal:75,carb:4.0,prot:7.7,fat:3.0,unit:'g',base:100},
+  {name:'Fromage blanc nature',cat:'Produits laitiers',cal:75,carb:4.0,prot:7.7,fat:3.0,unit:'g',base:100},
   {name:'Lait demi-écrémé',cat:'Produits laitiers',cal:47,carb:4.8,prot:3.3,fat:1.6,unit:'ml',base:100},
   {name:'Lait entier',cat:'Produits laitiers',cal:65,carb:4.8,prot:3.3,fat:3.6,unit:'ml',base:100},
   {name:'Lait de coco',cat:'Boissons',cal:178,carb:1.5,prot:1.9,fat:18.0,unit:'ml',base:100},
@@ -908,20 +950,19 @@ const FOOD_DB=[
   {name:'Potimarron',cat:'Légumes',cal:34,carb:7.0,prot:1.0,fat:0.1,unit:'g',base:100},
   {name:"Pousses d'épinards",cat:'Légumes',cal:22,carb:1.5,prot:2.2,fat:0.2,unit:'g',base:100},
   {name:'Tomate',cat:'Légumes',cal:18,carb:3.9,prot:0.9,fat:0.2,unit:'g',base:100},
-  {name:'Ananas',cat:'Fruits',cal:46,carb:11.0,prot:0.0,fat:0.0,unit:'g',base:100},
-  {name:'Banane',cat:'Fruits',cal:89,carb:23.0,prot:1.1,fat:0.3,unit:'g',base:100},
-  {name:'Clémentine',cat:'Fruits',cal:47.8,carb:12.2,prot:0.8,fat:0.0,unit:'g',base:100},
-  {name:'Dattes',cat:'Fruits',cal:303,carb:70.0,prot:1.7,fat:0.2,unit:'g',base:100},
-  {name:'Pomme',cat:'Fruits',cal:52,carb:14.0,prot:0.3,fat:0.2,unit:'g',base:100},
+  {name:'Ananas (tranche)',cat:'Fruits',cal:46,carb:11.0,prot:0.0,fat:0.0,unit:'tranche',base:1},
+  {name:'Banane',cat:'Fruits',cal:89,carb:23.0,prot:1.1,fat:0.3,unit:'banane',base:1},
+  {name:'Clémentine',cat:'Fruits',cal:40,carb:10.2,prot:0.7,fat:0.0,unit:'clémentine',base:1},
+  {name:'Dattes',cat:'Fruits',cal:23,carb:5.4,prot:0.1,fat:0.0,unit:'datte',base:1},
+  {name:'Pomme',cat:'Fruits',cal:80,carb:21.0,prot:0.4,fat:0.3,unit:'pomme',base:1},
   {name:'Beurre',cat:'Matières grasses',cal:744,carb:0.8,prot:0.7,fat:82.0,unit:'g',base:100},
-  {name:'Beurre cacahuète Cherokee',cat:'Matières grasses',cal:608,carb:12.0,prot:30.0,fat:47.0,unit:'g',base:100},
-  {name:'Beurre cacahuète Bio Jardin',cat:'Matières grasses',cal:622,carb:13.0,prot:26.0,fat:50.0,unit:'g',base:100},
+  {name:'Beurre de cacahuète',cat:'Matières grasses',cal:615,carb:12.5,prot:28.0,fat:48.5,unit:'g',base:100},
   {name:"Huile d'olive",cat:'Matières grasses',cal:821,carb:0.0,prot:0.0,fat:91.2,unit:'ml',base:100},
   {name:'Coulis de tomate',cat:'Sauces & Condiments',cal:43,carb:7.8,prot:1.4,fat:0.1,unit:'g',base:100},
   {name:'Ketchup',cat:'Sauces & Condiments',cal:40,carb:5.9,prot:1.6,fat:0.1,unit:'g',base:100},
   {name:'Mayonnaise',cat:'Sauces & Condiments',cal:270,carb:6.1,prot:0.7,fat:27.0,unit:'g',base:100},
   {name:'Moutarde',cat:'Sauces & Condiments',cal:152,carb:2.5,prot:7.5,fat:11.0,unit:'g',base:100},
-  {name:'Sauce Fajita (Old El Paso)',cat:'Sauces & Condiments',cal:45,carb:9.7,prot:1.3,fat:0.5,unit:'g',base:100},
+  {name:'Sauce Fajita',cat:'Sauces & Condiments',cal:45,carb:9.7,prot:1.3,fat:0.5,unit:'g',base:100},
   {name:'Sauce Tandoori',cat:'Sauces & Condiments',cal:99,carb:13.0,prot:2.2,fat:4.0,unit:'g',base:100},
   {name:'Sauce tikka masala',cat:'Sauces & Condiments',cal:103,carb:7.5,prot:1.5,fat:7.0,unit:'g',base:100},
   {name:'Sauce tomate cuisinée',cat:'Sauces & Condiments',cal:73,carb:9.3,prot:1.1,fat:3.5,unit:'g',base:100},
@@ -1052,24 +1093,24 @@ const FOOD_DB=[
   {name:'Cresson',cat:'Légumes',cal:32,carb:5.5,prot:2.6,fat:0.7,unit:'g',base:100},
   {name:'Persil frais',cat:'Légumes',cal:35,carb:6.3,prot:3.0,fat:0.8,unit:'g',base:100},
   // ── FRUITS ──
-  {name:'Orange',cat:'Fruits',cal:47,carb:12.0,prot:0.9,fat:0.1,unit:'g',base:100},
-  {name:'Fraise',cat:'Fruits',cal:32,carb:7.7,prot:0.7,fat:0.3,unit:'g',base:100},
-  {name:'Framboise',cat:'Fruits',cal:52,carb:12.0,prot:1.2,fat:0.7,unit:'g',base:100},
+  {name:'Orange',cat:'Fruits',cal:62,carb:16.0,prot:1.2,fat:0.1,unit:'orange',base:1},
+  {name:'Fraises',cat:'Fruits',cal:32,carb:7.7,prot:0.7,fat:0.3,unit:'g',base:100},
+  {name:'Framboises',cat:'Fruits',cal:52,carb:12.0,prot:1.2,fat:0.7,unit:'g',base:100},
   {name:'Raisin blanc',cat:'Fruits',cal:69,carb:18.0,prot:0.6,fat:0.2,unit:'g',base:100},
-  {name:'Poire',cat:'Fruits',cal:57,carb:15.0,prot:0.4,fat:0.1,unit:'g',base:100},
-  {name:'Pêche',cat:'Fruits',cal:39,carb:9.5,prot:0.9,fat:0.1,unit:'g',base:100},
-  {name:'Melon',cat:'Fruits',cal:34,carb:8.2,prot:0.8,fat:0.2,unit:'g',base:100},
+  {name:'Poire',cat:'Fruits',cal:85,carb:22.0,prot:0.6,fat:0.1,unit:'poire',base:1},
+  {name:'Pêche',cat:'Fruits',cal:58,carb:14.0,prot:1.4,fat:0.2,unit:'pêche',base:1},
+  {name:'Melon (tranche)',cat:'Fruits',cal:55,carb:13.0,prot:1.3,fat:0.3,unit:'tranche',base:1},
   {name:'Mangue',cat:'Fruits',cal:60,carb:15.0,prot:0.8,fat:0.4,unit:'g',base:100},
-  {name:'Kiwi',cat:'Fruits',cal:61,carb:15.0,prot:1.1,fat:0.5,unit:'g',base:100},
-  {name:'Abricot',cat:'Fruits',cal:48,carb:11.0,prot:1.4,fat:0.4,unit:'g',base:100},
+  {name:'Kiwi',cat:'Fruits',cal:42,carb:10.0,prot:0.8,fat:0.3,unit:'kiwi',base:1},
+  {name:'Abricot',cat:'Fruits',cal:17,carb:4.0,prot:0.5,fat:0.1,unit:'abricot',base:1},
   {name:'Myrtilles',cat:'Fruits',cal:57,carb:14.0,prot:0.7,fat:0.3,unit:'g',base:100},
-  {name:'Citron',cat:'Fruits',cal:29,carb:9.3,prot:1.1,fat:0.3,unit:'g',base:100},
-  {name:'Pastèque',cat:'Fruits',cal:30,carb:7.6,prot:0.6,fat:0.2,unit:'g',base:100},
-  {name:'Cerise',cat:'Fruits',cal:63,carb:16.0,prot:1.1,fat:0.2,unit:'g',base:100},
-  {name:'Pamplemousse',cat:'Fruits',cal:33,carb:7.9,prot:0.7,fat:0.1,unit:'g',base:100},
-  {name:'Litchi',cat:'Fruits',cal:66,carb:17.0,prot:0.8,fat:0.4,unit:'g',base:100},
-  {name:'Prune',cat:'Fruits',cal:46,carb:11.0,prot:0.7,fat:0.3,unit:'g',base:100},
-  {name:'Figue fraîche',cat:'Fruits',cal:74,carb:19.0,prot:0.8,fat:0.3,unit:'g',base:100},
+  {name:'Citron',cat:'Fruits',cal:18,carb:5.6,prot:0.7,fat:0.2,unit:'citron',base:1},
+  {name:'Pastèque (tranche)',cat:'Fruits',cal:85,carb:21.0,prot:1.7,fat:0.5,unit:'tranche',base:1},
+  {name:'Cerises',cat:'Fruits',cal:63,carb:16.0,prot:1.1,fat:0.2,unit:'g',base:100},
+  {name:'Pamplemousse',cat:'Fruits',cal:50,carb:12.0,prot:1.0,fat:0.1,unit:'pamplemousse',base:1},
+  {name:'Litchi',cat:'Fruits',cal:12,carb:3.1,prot:0.1,fat:0.1,unit:'litchi',base:1},
+  {name:'Prune',cat:'Fruits',cal:28,carb:6.6,prot:0.4,fat:0.2,unit:'prune',base:1},
+  {name:'Figue fraîche',cat:'Fruits',cal:37,carb:9.5,prot:0.4,fat:0.2,unit:'figue',base:1},
   {name:'Raisin noir',cat:'Fruits',cal:70,carb:18.0,prot:0.7,fat:0.2,unit:'g',base:100},
   {name:'Grenade',cat:'Fruits',cal:83,carb:19.0,prot:1.7,fat:1.2,unit:'g',base:100},
   // ── MATIÈRES GRASSES ──
@@ -1404,6 +1445,7 @@ function finishOnboarding(){
   localStorage.setItem('zth3_goals',   JSON.stringify(goals));
   localStorage.setItem('zth3_onboarded','1');
   document.getElementById('onboarding').classList.add('hidden');
+  loadProfileForm();
   renderToday();
 }
 
@@ -1560,7 +1602,6 @@ function showPage(id,btn){
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
-  document.getElementById('fab').style.display=id==='today'?'flex':'none';
   if(id==='history') renderHistory();
   if(id==='mymeal')  renderMyMeal();
   if(id==='goals')   loadGoalsForm();
@@ -1718,15 +1759,16 @@ function openMealModal(mealId,mealName){
   document.getElementById('mealModalTitle').textContent='Ajouter · '+mealName;
   document.getElementById('modalSearch').value='';
   document.getElementById('qtyBlock').style.display='none';
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===0));
-  document.querySelectorAll('.tab-content').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.querySelectorAll('#mealModal .tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.querySelectorAll('#mealModal .tab-content').forEach((t,i)=>t.classList.toggle('active',i===0));
   renderRecents(); renderFavsChips(); renderModalSearch();
   document.getElementById('mealModal').classList.add('open');
 }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function closeModal(id){ if(id==='mealModal') stopScanner(); document.getElementById(id).classList.remove('open'); }
 function switchTab(tabId,btn){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  if(tabId!=='tscan') stopScanner();
+  document.querySelectorAll('#mealModal .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#mealModal .tab-content').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active'); document.getElementById(tabId).classList.add('active');
 }
 
@@ -1910,6 +1952,132 @@ function addManual(){
   saveLogs(); closeModal('mealModal'); renderToday(); showToast('✅ '+name+' ajouté');
 }
 
+// ── OPEN FOOD FACTS ──
+let offTimeout=null;
+
+function searchOFF(){
+  const q=(document.getElementById('offSearch').value||'').trim();
+  const c=document.getElementById('offResults');
+  if(!q){ c.innerHTML='<div class="empty-meal">Tape un aliment pour chercher parmi 2 millions de produits</div>'; return; }
+  clearTimeout(offTimeout);
+  c.innerHTML='<div class="off-spinner">Recherche en cours…</div>';
+  offTimeout=setTimeout(async()=>{
+    try{
+      const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=true&fields=product_name,nutriments,code&page_size=15&lc=fr&cc=fr`;
+      const r=await fetch(url);
+      const data=await r.json();
+      const prods=(data.products||[]).filter(p=>
+        p.product_name&&p.product_name.trim()&&
+        p.nutriments&&(p.nutriments['energy-kcal_100g']||0)>0
+      );
+      if(!prods.length){ c.innerHTML='<div class="empty-meal">Aucun résultat — essaie un autre terme</div>'; return; }
+      const unitLbl='/ 100g';
+      c.innerHTML=prods.map(p=>{
+        const n=p.nutriments;
+        const cal=Math.round(n['energy-kcal_100g']||0);
+        const prot=Math.round((n['proteins_100g']||0)*10)/10;
+        const carb=Math.round((n['carbohydrates_100g']||0)*10)/10;
+        const fat=Math.round((n['fat_100g']||0)*10)/10;
+        const name=p.product_name.trim().replace(/"/g,"'").slice(0,60);
+        const food={name,cat:'Produits en ligne',cal,prot,carb,fat,unit:'g',base:100};
+        const fs=JSON.stringify(food).replace(/"/g,'&quot;');
+        return `<div class="flist-item" onclick="pickFood(${fs})">
+          <div class="flist-left">
+            <div class="flist-name">${name}</div>
+            <div class="flist-meta">Open Food Facts · ${unitLbl} · P:${prot}g G:${carb}g L:${fat}g</div>
+          </div>
+          <div class="flist-right"><span class="flist-cal">${cal} kcal</span></div>
+        </div>`;
+      }).join('');
+    }catch(e){
+      c.innerHTML='<div class="empty-meal">⚠️ Erreur réseau — vérifie ta connexion</div>';
+    }
+  },600);
+}
+
+// ── SCANNER CODE-BARRES ──
+let html5Scanner=null;
+
+async function startScanner(){
+  const box=document.getElementById('scannerBox');
+  const startBtn=document.getElementById('startScanBtn');
+  const stopBtn=document.getElementById('stopScanBtn');
+  if(!box) return;
+  box.style.display='block';
+  startBtn.style.display='none';
+  stopBtn.style.display='block';
+  document.getElementById('scanResult').innerHTML='';
+  box.innerHTML='';
+  try{
+    html5Scanner=new Html5Qrcode('scannerBox');
+    await html5Scanner.start(
+      {facingMode:'environment'},
+      {fps:10,qrbox:{width:220,height:220}},
+      (code)=>handleBarcode(code),
+      ()=>{}
+    );
+  }catch(e){
+    box.style.display='none';
+    startBtn.style.display='block';
+    stopBtn.style.display='none';
+    showToast("⚠️ Impossible d'accéder à la caméra");
+  }
+}
+
+async function stopScanner(){
+  try{
+    if(html5Scanner&&html5Scanner.isScanning){ await html5Scanner.stop(); }
+  }catch(e){}
+  html5Scanner=null;
+  const box=document.getElementById('scannerBox');
+  const startBtn=document.getElementById('startScanBtn');
+  const stopBtn=document.getElementById('stopScanBtn');
+  if(box){ box.style.display='none'; box.innerHTML=''; }
+  if(startBtn) startBtn.style.display='block';
+  if(stopBtn) stopBtn.style.display='none';
+}
+
+async function handleBarcode(code){
+  await stopScanner();
+  showToast('📷 Code scanné !');
+  const c=document.getElementById('offResults');
+  c.innerHTML='<div class="off-spinner">Chargement du produit…</div>';
+  // Basculer vers l'onglet "En ligne" pour afficher le résultat
+  document.querySelectorAll('#mealModal .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#mealModal .tab-content').forEach(t=>t.classList.remove('active'));
+  const offTab=document.querySelector('#mealModal .tab:nth-child(2)');
+  if(offTab) offTab.classList.add('active');
+  const toffDiv=document.getElementById('toff');
+  if(toffDiv) toffDiv.classList.add('active');
+  try{
+    const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}?fields=product_name,nutriments`);
+    const data=await r.json();
+    if(data.status!==1||!data.product){ c.innerHTML='<div class="empty-meal">Produit non trouvé dans Open Food Facts</div>'; return; }
+    const p=data.product; const n=p.nutriments||{};
+    const cal=Math.round(n['energy-kcal_100g']||0);
+    if(!cal){ c.innerHTML='<div class="empty-meal">Données nutritionnelles incomplètes pour ce produit</div>'; return; }
+    const prot=Math.round((n['proteins_100g']||0)*10)/10;
+    const carb=Math.round((n['carbohydrates_100g']||0)*10)/10;
+    const fat=Math.round((n['fat_100g']||0)*10)/10;
+    const name=(p.product_name||'Produit').trim().replace(/"/g,"'").slice(0,60);
+    const food={name,cat:'Produits scannés',cal,prot,carb,fat,unit:'g',base:100};
+    const fs=JSON.stringify(food).replace(/"/g,'&quot;');
+    c.innerHTML=`<div class="off-result-found">✅ Produit trouvé !<br>
+      🔥 ${cal} kcal · 💪 P:${prot}g · 🍞 G:${carb}g · 🥑 L:${fat}g<br>
+      <span style="font-size:11px;font-weight:400">Pour 100g</span>
+    </div>
+    <div class="flist-item" onclick="pickFood(${fs})">
+      <div class="flist-left">
+        <div class="flist-name">${name}</div>
+        <div class="flist-meta">Scanné · / 100g</div>
+      </div>
+      <div class="flist-right"><span class="flist-cal">${cal} kcal</span></div>
+    </div>`;
+  }catch(e){
+    c.innerHTML='<div class="empty-meal">⚠️ Erreur réseau — vérifie ta connexion</div>';
+  }
+}
+
 // ── MES REPAS ──
 function getProfileGoal(){
   const p=JSON.parse(localStorage.getItem('zth3_profile')||'null');
@@ -2069,7 +2237,27 @@ function renderFoodDb(){
 }
 
 function toggleFavDb2(name){ const idx=favIds.indexOf(name); if(idx>=0) favIds.splice(idx,1); else favIds.unshift(name); saveFavs(); renderFoodDb(); renderFavsList(); showToast(favIds.includes(name)?'⭐ Ajouté':'Retiré des favoris'); }
-function openDbModal(){ document.getElementById('dbModal').classList.add('open'); }
+function openDbModal(){
+  document.getElementById('dbName').value='';
+  document.getElementById('dbCal').value='';
+  document.getElementById('dbProt').value='';
+  document.getElementById('dbCarb').value='';
+  document.getElementById('dbFat').value='';
+  document.getElementById('dbUnitType').value='100g';
+  document.getElementById('dbUnitName').value='';
+  document.getElementById('dbUnitNameRow').style.display='none';
+  document.getElementById('dbUnitHint').textContent='Valeurs pour 100 g';
+  document.getElementById('dbModal').classList.add('open');
+}
+
+function updateDbUnitLabel(){
+  const v=document.getElementById('dbUnitType').value;
+  const hint=document.getElementById('dbUnitHint');
+  const unitRow=document.getElementById('dbUnitNameRow');
+  if(v==='100g'){ hint.textContent='Valeurs pour 100 g'; unitRow.style.display='none'; }
+  else if(v==='100ml'){ hint.textContent='Valeurs pour 100 ml'; unitRow.style.display='none'; }
+  else { hint.textContent='Valeurs pour 1 unité'; unitRow.style.display='block'; }
+}
 
 function saveDbFood(){
   const name=document.getElementById('dbName').value.trim();
@@ -2078,8 +2266,15 @@ function saveDbFood(){
   const prot=parseFloat(document.getElementById('dbProt').value)||0;
   const carb=parseFloat(document.getElementById('dbCarb').value)||0;
   const fat=parseFloat(document.getElementById('dbFat').value)||0;
+  const utype=document.getElementById('dbUnitType').value;
   if(!name||!cal){ showToast('⚠️ Nom et calories requis'); return; }
-  customFoods.push({name,cat,cal,prot,carb,fat,unit:'g',base:100});
+  let unit='g', base=100;
+  if(utype==='100ml'){ unit='ml'; base=100; }
+  else if(utype==='unit'){
+    unit=(document.getElementById('dbUnitName').value.trim()||'unité');
+    base=1;
+  }
+  customFoods.push({name,cat,cal,prot,carb,fat,unit,base});
   localStorage.setItem('zth3_custom',JSON.stringify(customFoods));
   closeModal('dbModal'); renderFoodDb(); showToast('✅ '+name+' ajouté');
 }
@@ -2148,7 +2343,7 @@ const MENU_TEMPLATES = [
     lunch:[
       {name:'Blanc de poulet rôti',qty:180},{name:'Riz basmati',qty:120},{name:'Tomate',qty:150}],
     snack:[
-      {name:'Banane',qty:130},{name:'Beurre cacahuète Cherokee',qty:25}],
+      {name:'Banane',qty:130},{name:'Beurre de cacahuète',qty:25}],
     dinner:[
       {name:'Œuf (moyen)',qty:3},{name:'Pain complet',qty:80},{name:'Fromage frais nature 0%',qty:150}]}
   },
@@ -2159,9 +2354,9 @@ const MENU_TEMPLATES = [
     lunch:[
       {name:'Escalope de dinde',qty:200},{name:'Riz basmati',qty:120},{name:'Haricots verts',qty:150}],
     snack:[
-      {name:'Fromage blanc Danone',qty:150},{name:'Miel',qty:15}],
+      {name:'Fromage blanc nature',qty:150},{name:'Miel',qty:15}],
     dinner:[
-      {name:'Pâtes HP Carrefour',qty:110},{name:'Sauce bolognaise',qty:100},{name:'Emmental râpé',qty:20}]}
+      {name:'Pâtes protéinées',qty:110},{name:'Sauce bolognaise',qty:100},{name:'Emmental râpé',qty:20}]}
   },
   // vite_3 : P.déj 399 + Dej 478 + Collation 293 + Dîner 820 = 1990 kcal
   { id:'vite_3', goal:'vite', name:'Pain frais & Lentilles minute',
@@ -2170,7 +2365,7 @@ const MENU_TEMPLATES = [
     lunch:[
       {name:'Lentilles vertes',qty:200},{name:'Œuf (moyen)',qty:3},{name:'Tomate',qty:200}],
     snack:[
-      {name:'Skyr',qty:200},{name:'Myrtilles',qty:100},{name:'Beurre cacahuète Cherokee',qty:20}],
+      {name:'Skyr',qty:200},{name:'Myrtilles',qty:100},{name:'Beurre de cacahuète',qty:20}],
     dinner:[
       {name:'Blanc de poulet rôti',qty:200},{name:'Pâtes complètes',qty:130},{name:'Courgette',qty:150}]}
   },
@@ -2182,14 +2377,14 @@ const MENU_TEMPLATES = [
     lunch:[
       {name:'Blanc de poulet rôti',qty:180},{name:'Riz basmati',qty:110},{name:'Courgette',qty:200}],
     snack:[
-      {name:'Fromage blanc Danone',qty:150},{name:'Myrtilles',qty:80},{name:'Beurre cacahuète Cherokee',qty:15}],
+      {name:'Fromage blanc nature',qty:150},{name:'Myrtilles',qty:80},{name:'Beurre de cacahuète',qty:15}],
     dinner:[
       {name:'Pâtes complètes',qty:100},{name:'Viande hachée 5%',qty:150},{name:'Sauce bolognaise',qty:80},{name:'Emmental râpé',qty:15}]}
   },
   // maison_2 : P.déj 553 + Dej 495 + Collation 262 + Dîner 772 = 2082 kcal
   { id:'maison_2', goal:'maison', name:'Œufs pain & Escalope patates douces',
     meals:{ breakfast:[
-      {name:'Pain multicéréales',qty:90},{name:'Œuf (moyen)',qty:3},{name:'Fromage blanc Danone',qty:150}],
+      {name:'Pain multicéréales',qty:90},{name:'Œuf (moyen)',qty:3},{name:'Fromage blanc nature',qty:150}],
     lunch:[
       {name:'Escalope de dinde',qty:220},{name:'Patates douces',qty:250},{name:'Haricots verts',qty:150}],
     snack:[
@@ -2200,23 +2395,23 @@ const MENU_TEMPLATES = [
   // maison_3 : P.déj 675 + Dej 452 + Collation 214 + Dîner 763 = 2104 kcal
   { id:'maison_3', goal:'maison', name:'Porridge & Dinde lentilles',
     meals:{ breakfast:[
-      {name:"Flocons d'avoine complète",qty:90},{name:'Lait entier',qty:200},{name:'Myrtilles',qty:100},{name:'Beurre cacahuète Cherokee',qty:25}],
+      {name:"Flocons d'avoine complète",qty:90},{name:'Lait entier',qty:200},{name:'Myrtilles',qty:100},{name:'Beurre de cacahuète',qty:25}],
     lunch:[
       {name:'Escalope de dinde',qty:200},{name:'Lentilles vertes',qty:180},{name:'Tomate',qty:150}],
     snack:[
       {name:'Fromage frais nature 0%',qty:150},{name:'Banane',qty:150}],
     dinner:[
-      {name:'Pâtes HP Carrefour',qty:120},{name:'Blanc de poulet rôti',qty:180},{name:'Brocoli',qty:150}]}
+      {name:'Pâtes protéinées',qty:120},{name:'Blanc de poulet rôti',qty:180},{name:'Brocoli',qty:150}]}
   },
   // ── 👨‍🍳 CHEF — base ~2200 kcal ──
   // chef_1 : P.déj 628 + Dej 789 + Collation 213 + Dîner 505 = 2135 kcal
   { id:'chef_1', goal:'chef', name:'Bowl complet & Poulet champignons gratiné',
     meals:{ breakfast:[
-      {name:"Flocons d'avoine complète",qty:90},{name:'Skyr',qty:150},{name:'Myrtilles',qty:80},{name:'Beurre cacahuète Cherokee',qty:20},{name:'Miel',qty:12}],
+      {name:"Flocons d'avoine complète",qty:90},{name:'Skyr',qty:150},{name:'Myrtilles',qty:80},{name:'Beurre de cacahuète',qty:20},{name:'Miel',qty:12}],
     lunch:[
       {name:'Riz basmati',qty:100},{name:'Blanc de poulet rôti',qty:180},{name:'Champignons',qty:150},{name:'Sauce béchamel',qty:50},{name:'Emmental râpé',qty:15}],
     snack:[
-      {name:'Fromage blanc Danone',qty:180},{name:'Myrtilles',qty:80},{name:'Miel',qty:10}],
+      {name:'Fromage blanc nature',qty:180},{name:'Myrtilles',qty:80},{name:'Miel',qty:10}],
     dinner:[
       {name:'Patates douces',qty:200},{name:'Viande hachée 5%',qty:160},{name:'Brocoli',qty:150},{name:'Emmental râpé',qty:20}]}
   },
@@ -2227,18 +2422,18 @@ const MENU_TEMPLATES = [
     lunch:[
       {name:'Escalope de dinde',qty:200},{name:'Patates douces',qty:220},{name:'Champignons',qty:120},{name:'Sauce béchamel',qty:50}],
     snack:[
-      {name:'Skyr',qty:180},{name:'Banane',qty:120},{name:'Beurre cacahuète Cherokee',qty:15}],
+      {name:'Skyr',qty:180},{name:'Banane',qty:120},{name:'Beurre de cacahuète',qty:15}],
     dinner:[
       {name:'Pâtes complètes',qty:120},{name:'Blanc de poulet rôti',qty:160},{name:'Courgette',qty:150},{name:'Emmental râpé',qty:20},{name:'Sauce bolognaise',qty:60}]}
   },
   // chef_3 : P.déj 685 + Dej 770 + Collation 209 + Dîner 589 = 2253 kcal
   { id:'chef_3', goal:'chef', name:'Porridge royal & Festin patates-viande',
     meals:{ breakfast:[
-      {name:"Flocons d'avoine complète",qty:80},{name:'Lait entier',qty:200},{name:'Banane',qty:100},{name:'Beurre cacahuète Cherokee',qty:20},{name:'Myrtilles',qty:80}],
+      {name:"Flocons d'avoine complète",qty:80},{name:'Lait entier',qty:200},{name:'Banane',qty:100},{name:'Beurre de cacahuète',qty:20},{name:'Myrtilles',qty:80}],
     lunch:[
       {name:'Riz basmati',qty:110},{name:'Escalope de dinde',qty:200},{name:'Haricots verts',qty:150},{name:'Emmental râpé',qty:20},{name:'Sauce béchamel',qty:50}],
     snack:[
-      {name:'Fromage blanc Danone',qty:200},{name:'Confiture fraise sans sucre',qty:15},{name:'Myrtilles',qty:80}],
+      {name:'Fromage blanc nature',qty:200},{name:'Confiture fraise sans sucre',qty:15},{name:'Myrtilles',qty:80}],
     dinner:[
       {name:'Patates douces',qty:220},{name:'Viande hachée 5%',qty:180},{name:'Brocoli',qty:150},{name:'Champignons',qty:100},{name:'Emmental râpé',qty:25}]}
   }
