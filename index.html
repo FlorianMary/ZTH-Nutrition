@@ -93,7 +93,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .menu-profile-banner span{opacity:.8;font-weight:400}
 .accord-header{display:flex;align-items:center;justify-content:space-between;padding:18px 16px;cursor:pointer;user-select:none;background:var(--card)}
 .accord-header:active{background:var(--card2)}
-.accord-title{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px}
+.accord-title{font-size:15px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px}
 .accord-body{display:none;padding:0 16px 14px;border-top:1px solid var(--border)}
 .accord-body.open{display:block}
 .fab{position:fixed;bottom:calc(var(--nav-h)+14px);right:calc(50% - 215px + 14px);background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:white;border:none;border-radius:50%;width:52px;height:52px;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(76,175,80,.5);z-index:150;display:flex;align-items:center;justify-content:center;transition:transform .15s}
@@ -253,6 +253,56 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .cal-day-bar{width:28px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:1px}
 .cal-day-fill{height:100%;border-radius:2px;transition:width .4s}
 
+/* ══ SMART SUGGEST ══ */
+.suggest-block{background:var(--card);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.suggest-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.suggest-title{font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px}
+.suggest-subtitle{font-size:11px;color:var(--text2);margin-top:2px;font-weight:500}
+.suggest-refresh{background:none;border:none;font-size:16px;cursor:pointer;padding:4px 6px;border-radius:8px;color:var(--text2);transition:transform .3s}
+.suggest-refresh:active{transform:rotate(180deg);background:var(--primary-soft)}
+.suggest-cards{display:flex;flex-direction:column;gap:8px}
+.suggest-card{background:var(--card2);border:1.5px solid var(--border);border-radius:14px;padding:12px 13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.suggest-card:active{border-color:var(--primary);background:var(--primary-soft);transform:scale(.99)}
+.suggest-card-left{flex:1;min-width:0}
+.suggest-card-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.suggest-card-meta{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.4}
+.suggest-card-right{text-align:right;flex-shrink:0}
+.suggest-card-cal{font-size:14px;font-weight:900;color:var(--primary-dark)}
+.suggest-card-prot{font-size:10px;color:var(--blue);font-weight:700;margin-top:1px}
+.suggest-macro-gap{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.suggest-gap-pill{display:inline-flex;align-items:center;gap:3px;background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:var(--text2)}
+.suggest-gap-pill.urgent{background:rgba(33,150,243,.1);border-color:var(--blue);color:var(--blue)}
+.suggest-msg{font-size:12px;color:var(--text2);font-style:italic;text-align:center;padding:6px 0;line-height:1.5}
+/* ══ BILAN HEBDO ══ */
+.bilan-card{background:var(--card);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.bilan-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.bilan-title{font-size:14px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:7px}
+.bilan-week-lbl{font-size:11px;color:var(--text2);font-weight:500}
+.bilan-score-row{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.bilan-score-circle{position:relative;width:72px;height:72px;flex-shrink:0}
+.bilan-score-circle svg{transform:rotate(-90deg)}
+.bilan-score-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;line-height:1}
+.bilan-score-num{font-size:22px;font-weight:900;color:var(--text)}
+.bilan-score-den{font-size:10px;color:var(--text2);font-weight:600}
+.bilan-score-label{font-size:13px;font-weight:700;color:var(--text)}
+.bilan-score-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.bilan-days-dots{display:flex;gap:5px;margin-bottom:14px;justify-content:center}
+.bilan-dot{display:flex;flex-direction:column;align-items:center;gap:3px}
+.bilan-dot-circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+.bilan-dot-lbl{font-size:9px;color:var(--text2);font-weight:700;text-transform:uppercase}
+.bilan-dot.ok .bilan-dot-circle{background:var(--primary-soft);color:var(--primary-dark)}
+.bilan-dot.over .bilan-dot-circle{background:rgba(244,67,54,.12);color:var(--red)}
+.bilan-dot.low .bilan-dot-circle{background:rgba(255,152,0,.15);color:var(--orange)}
+.bilan-dot.empty .bilan-dot-circle{background:var(--card2);color:var(--text2)}
+.bilan-macros{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.bilan-macro-row{display:flex;align-items:center;gap:8px}
+.bilan-macro-icon{font-size:13px;width:18px;text-align:center;flex-shrink:0}
+.bilan-macro-name{font-size:12px;font-weight:700;color:var(--text2);width:68px;flex-shrink:0}
+.bilan-macro-bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.bilan-macro-bar{height:100%;border-radius:4px;transition:width .6s ease}
+.bilan-macro-val{font-size:12px;font-weight:800;color:var(--text);width:60px;text-align:right;flex-shrink:0}
+.bilan-best-day{background:linear-gradient(135deg,rgba(255,152,0,.1),rgba(255,152,0,.05));border:1px solid rgba(255,152,0,.2);border-radius:13px;padding:10px 13px;margin-bottom:10px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text)}
+.bilan-tone-msg{background:var(--primary-soft);border-radius:13px;padding:11px 14px;font-size:13px;line-height:1.6;color:var(--primary-dark);font-weight:600}
 /* ══ EMPTY STATE ══ */
 .empty-state{text-align:center;padding:24px 16px;color:var(--text2)}
 .empty-icon{font-size:36px;margin-bottom:8px}
@@ -409,6 +459,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       </div>
     </div>
 
+    <div id="smartSuggest"></div>
     <div id="homeRecents"></div>
     <button class="copy-btn" id="copyYestBtn" onclick="copyYesterdayMeals()">
       📋 <span id="copyYestLabel">Copier les repas d'hier</span>
@@ -419,6 +470,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
   <!-- PAGE : HISTORIQUE -->
   <div class="page" id="page-history">
+    <div id="weeklyBilan"></div>
     <div class="period-tabs">
       <button class="period-tab active" onclick="setPeriod(7,this)">7 j</button>
       <button class="period-tab" onclick="setPeriod(14,this)">14 j</button>
@@ -447,8 +499,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <div class="accord-header" onclick="toggleAccord('menuAccord','chevMenuAccord')">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:15px">🍽️</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:22px">🍽️</span>
           <span class="accord-title">Menus Types</span>
         </div>
         <span class="chevron" id="chevMenuAccord">▾</span>
@@ -464,10 +516,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <div class="accord-header" onclick="toggleAccord('dbAccord','chevDbAccord')">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:15px">🥗</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:22px">🥗</span>
           <span class="accord-title">Base d'aliments</span>
-          <span style="font-size:10px;color:var(--text2);font-weight:600">(<span id="foodCount">0</span>)</span>
+          <span style="font-size:11px;color:var(--text2);font-weight:600">(<span id="foodCount">0</span>)</span>
         </div>
         <span class="chevron" id="chevDbAccord">▾</span>
       </div>
@@ -682,12 +734,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         </div>
         <p class="scanner-hint" id="scannerHint" style="margin-top:8px">Démarrage de la caméra…</p>
         <div id="scanResult"></div>
-        <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
-          <div style="font-size:11px;color:var(--text2);text-align:center;margin-bottom:7px">Code non détecté ? Saisis-le manuellement ↓</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input type="number" class="form-input" id="manualBarcodeInput" placeholder="Ex : 3017620429484" style="font-size:13px;flex:1">
-            <button class="btn btn-primary" style="padding:0 16px;height:44px;flex-shrink:0" onclick="lookupManualBarcode()">🔍</button>
-          </div>
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+          <div style="font-size:12px;color:var(--text2);text-align:center;margin-bottom:10px;font-weight:600">⌨️ Saisir le code manuellement</div>
+          <input type="tel" inputmode="numeric" pattern="[0-9]*" class="form-input" id="manualBarcodeInput"
+            placeholder="Ex : 3017620429484"
+            style="font-size:16px;height:52px;letter-spacing:2px;text-align:center;width:100%;margin-bottom:8px;font-weight:600">
+          <button class="btn btn-primary" style="width:100%;height:50px;font-size:15px" onclick="lookupManualBarcode()">🔍 Rechercher ce produit</button>
         </div>
       </div>
     </div>
@@ -936,7 +988,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="confetti-wrap" id="confettiWrap"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/umd/index.min.js"></script>
 <script>
 const FOOD_DB=[
   {name:'Allumettes au four',cat:'Féculents',cal:161,carb:26.0,prot:2.5,fat:4.5,unit:'g',base:100},
@@ -1683,7 +1735,7 @@ function showPage(id,btn){
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
-  if(id==='history') renderHistory();
+  if(id==='history'){ renderWeeklyBilan(); renderHistory(); }
   if(id==='mymeal')  renderMyMeal();
   if(id==='goals')   loadGoalsForm();
 }
@@ -1781,7 +1833,134 @@ function renderToday(){
     ratio>=1.05?'linear-gradient(135deg,#B71C1C,var(--red))':
     ratio>=0.95?'linear-gradient(135deg,#1B5E20,var(--primary))':
     'linear-gradient(135deg,var(--primary-dark),var(--primary))';
-  renderMeals(); updateStreak(); renderCalStrip(); renderHomeRecents(); updateCopyBtn();
+  renderMeals(); updateStreak(); renderCalStrip(); renderHomeRecents(); updateCopyBtn(); renderSmartSuggest();
+}
+
+// ── SMART SUGGEST ──
+function renderSmartSuggest(){
+  const el=document.getElementById('smartSuggest');
+  if(!el) return;
+
+  // Only show on today
+  if(currentDate!==dateKey(0)){ el.innerHTML=''; return; }
+
+  const t=totals(currentDate);
+  const remCal=goals.cal-t.cal;
+  const remProt=goals.prot-t.prot;
+  const remCarb=goals.carb-t.carb;
+  const remFat=goals.fat-t.fat;
+
+  // Don't show if almost done or over target
+  if(remCal<=100){ el.innerHTML=''; return; }
+
+  // Hour-based context
+  const h=new Date().getHours();
+  const isBreakfast=h>=5&&h<10;
+  const isLunch=h>=11&&h<14;
+  const isDinner=h>=17&&h<22;
+  const isSnack=!isBreakfast&&!isLunch&&!isDinner;
+
+  const mealCtx=isBreakfast?'le petit-déjeuner':isLunch?'le déjeuner':isDinner?'le dîner':'un snack';
+
+  // Tone-based intro messages
+  const introMsgs={
+    zen:{emoji:'💡',msg:`Il te reste ${Math.round(remCal)} kcal. Voici quelques idées pour ${mealCtx} :`,title:'Suggestions pour toi'},
+    coach:{emoji:'🎯',msg:`${Math.round(remCal)} kcal à combler ! Choisis bien pour ${mealCtx} :`,title:'Que manger maintenant ?'},
+    sarcastique:{emoji:'🤔',msg:`Encore ${Math.round(remCal)} kcal… t'as pas encore mangé pour ${mealCtx} ?`,title:'T\'as faim, non ?'},
+    drill:{emoji:'💪',msg:`OBJECTIF : ${Math.round(remCal)} kcal restants. OPTIONS POUR ${mealCtx.toUpperCase()} :`,title:'REMPLIS TES MACROS'}
+  };
+  const intro=introMsgs[toneMode]||introMsgs.zen;
+
+  // Score food by how well it fills the macro gaps
+  function scoreFood(f){
+    const base=f.base||100;
+    // Use 1 unit for base:1, or a reasonable serving for base:100
+    const serv=base===1?1:100;
+    const factor=serv/base;
+    const fCal=(f.cal||0)*factor;
+    const fProt=(f.prot||0)*factor;
+    const fCarb=(f.carb||0)*factor;
+    const fFat=(f.fat||0)*factor;
+    if(fCal<10) return -Infinity;
+    // Avoid going over remaining calories
+    if(fCal>remCal*1.4) return -Infinity;
+    // Score: reward filling protein gap proportionally + calorie fit
+    const calFit=1-Math.abs(fCal-remCal*0.45)/(remCal+1);
+    const protScore=remProt>10?(fProt/Math.max(remProt,1)):0;
+    return calFit*0.5+protScore*0.5;
+  }
+
+  const foods=allFoods();
+  // Score and pick top candidates
+  const scored=foods.map(f=>({f,s:scoreFood(f)})).filter(x=>x.s>-Infinity);
+  scored.sort((a,b)=>b.s-a.s);
+
+  // Deduplicate by name and pick top 3
+  const seen=new Set();
+  const top=[];
+  for(const x of scored){
+    const n=x.f.name;
+    if(!seen.has(n)){ seen.add(n); top.push(x.f); }
+    if(top.length>=3) break;
+  }
+
+  if(top.length===0){ el.innerHTML=''; return; }
+
+  // Build gap pills
+  const gaps=[];
+  if(remProt>10) gaps.push(`<span class="suggest-gap-pill urgent">💪 ${Math.round(remProt)}g prot</span>`);
+  if(remCarb>20) gaps.push(`<span class="suggest-gap-pill">🍞 ${Math.round(remCarb)}g glucides</span>`);
+  if(remFat>8)  gaps.push(`<span class="suggest-gap-pill">🥑 ${Math.round(remFat)}g lipides</span>`);
+
+  // Build cards
+  const cardsHtml=top.map(f=>{
+    const base=f.base||100;
+    const serv=base===1?1:100;
+    const factor=serv/base;
+    const fCal=Math.round((f.cal||0)*factor);
+    const fProt=Math.round((f.prot||0)*factor);
+    const fCarb=Math.round((f.carb||0)*factor);
+    const servLabel=base===1?'1 unité':'100g';
+    const pctCal=Math.min(Math.round(fCal/Math.max(remCal,1)*100),100);
+    return `<div class="suggest-card" onclick="quickAddSuggestedFood('${f.name.replace(/'/g,"\\'")}')">
+      <div class="suggest-card-left">
+        <div class="suggest-card-name">${f.name}</div>
+        <div class="suggest-card-meta">${servLabel} · P:${fProt}g G:${fCarb}g L:${Math.round((f.fat||0)*factor)}g</div>
+      </div>
+      <div class="suggest-card-right">
+        <div class="suggest-card-cal">${fCal} kcal</div>
+        <div class="suggest-card-prot">${pctCal}% restant</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`<div class="suggest-block">
+    <div class="suggest-header">
+      <div>
+        <div class="suggest-title">${intro.emoji} ${intro.title}</div>
+        <div class="suggest-subtitle">${intro.msg}</div>
+      </div>
+      <button class="suggest-refresh" onclick="renderSmartSuggest()" title="Actualiser">🔄</button>
+    </div>
+    ${gaps.length?`<div class="suggest-macro-gap">${gaps.join('')}</div>`:''}
+    <div class="suggest-cards">${cardsHtml}</div>
+  </div>`;
+}
+
+function quickAddSuggestedFood(name){
+  // Find the next meal based on hour
+  const h=new Date().getHours();
+  let mealId='breakfast';
+  if(h>=10&&h<14) mealId='lunch';
+  else if(h>=14&&h<17) mealId='snack';
+  else if(h>=17) mealId='dinner';
+  const meal=MEALS.find(m=>m.id===mealId)||MEALS[1];
+  openMealModal(meal.id, meal.name);
+  // Pre-search the suggested food
+  setTimeout(()=>{
+    const input=document.getElementById('modalSearch');
+    if(input){ input.value=name; renderModalSearchHybrid(); }
+  }, 300);
 }
 
 function renderMeals(){
@@ -2138,110 +2317,103 @@ function searchOFF(){
   },600);
 }
 
-// ── SCANNER CODE-BARRES (v2 — BarcodeDetector + fallback html5-qrcode) ──
+// ── SCANNER CODE-BARRES (v3 — BarcodeDetector + ZXing + saisie manuelle) ──
 let scannerStream = null;
 let scannerInterval = null;
-let html5Scanner = null;
 let scannerRunning = false;
+
+function getScannerVideo(){
+  const box = document.getElementById('scannerBox');
+  let video = document.getElementById('scannerVideo');
+  if(!video){
+    video = document.createElement('video');
+    video.id = 'scannerVideo';
+    video.autoplay = true;
+    video.muted = true;
+    video.setAttribute('playsinline','');        // CRITIQUE iOS Safari
+    video.setAttribute('webkit-playsinline','');  // webkit legacy
+    video.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:12px;display:block';
+    box.insertBefore(video, box.firstChild);
+  }
+  return video;
+}
 
 async function startScanner(){
   if(scannerRunning) return;
-  const box = document.getElementById('scannerBox');
   const hint = document.getElementById('scannerHint');
-  if(!box) return;
-
   document.getElementById('scanResult').innerHTML = '';
   hint.textContent = 'Démarrage de la caméra…';
 
-  // ── Stratégie 1 : BarcodeDetector natif (iOS 17+, Chrome Android) ──
+  // ── Stratégie 1 : BarcodeDetector natif (Chrome Android, Edge, Desktop) ──
   if('BarcodeDetector' in window){
     try{
       scannerStream = await navigator.mediaDevices.getUserMedia({
         video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}
       });
-      // Créer/réutiliser l'élément vidéo
-      let video = document.getElementById('scannerVideo');
-      if(!video){
-        video = document.createElement('video');
-        video.id = 'scannerVideo';
-        video.autoplay = true;
-        video.muted = true;
-        video.setAttribute('playsinline','');   // CRITIQUE pour iOS Safari
-        video.setAttribute('webkit-playsinline','');
-        video.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:12px;display:block';
-        box.insertBefore(video, box.firstChild);
-      }
+      const video = getScannerVideo();
       video.srcObject = scannerStream;
       await video.play();
       scannerRunning = true;
       hint.textContent = 'Pointez vers un code-barres…';
-
-      const detector = new BarcodeDetector({
-        formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf']
-      });
+      const detector = new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39']});
       scannerInterval = setInterval(async()=>{
         if(!video.videoWidth || !scannerRunning) return;
         try{
           const codes = await detector.detect(video);
-          if(codes.length > 0){
-            clearInterval(scannerInterval); scannerInterval = null;
-            handleBarcode(codes[0].rawValue);
-          }
+          if(codes.length > 0){ clearInterval(scannerInterval); scannerInterval = null; handleBarcode(codes[0].rawValue); }
         }catch(e){}
-      }, 150); // ~6 fps — très réactif
+      }, 150);
       return;
     }catch(e){
-      // Caméra refusée — passer en fallback manuel
-      hint.textContent = '⚠️ Caméra non accessible — utilise la saisie manuelle ci-dessous';
-      return;
+      if(scannerStream){ scannerStream.getTracks().forEach(t=>t.stop()); scannerStream = null; }
     }
   }
 
-  // ── Stratégie 2 : html5-qrcode (iOS < 17, autres navigateurs) ──
-  if(typeof Html5Qrcode !== 'undefined'){
-    // Vider la box des éventuels résidus vidéo natifs
-    const oldVideo = document.getElementById('scannerVideo');
-    if(oldVideo) oldVideo.remove();
+  // ── Stratégie 2 : ZXing BrowserMultiFormatReader (iOS Safari, Firefox…) ──
+  const ZXB = window.ZXingBrowser || window.ZXing;
+  if(ZXB && ZXB.BrowserMultiFormatReader){
     try{
-      html5Scanner = new Html5Qrcode('scannerBox');
-      await html5Scanner.start(
-        {facingMode:{ideal:'environment'}},
-        {
-          fps: 20,
-          // Pas de qrbox : scan toute la surface
-          experimentalFeatures:{useBarCodeDetectorIfSupported:true},
-          aspectRatio: 1.33
-        },
-        (code)=>handleBarcode(code),
-        ()=>{}
+      const reader = new ZXB.BrowserMultiFormatReader();
+      window._zxingReader = reader;
+      const video = getScannerVideo();
+      // decodeFromConstraints gère getUserMedia + playsinline + démarrage
+      reader.decodeFromConstraints(
+        {video:{facingMode:{ideal:'environment'}}},
+        video,
+        (result, err)=>{
+          if(result && scannerRunning){
+            scannerRunning = false;
+            try{ reader.reset(); }catch(ex){}
+            handleBarcode(result.getText());
+          }
+        }
       );
       scannerRunning = true;
       hint.textContent = 'Pointez vers un code-barres…';
       return;
     }catch(e){
-      hint.textContent = '⚠️ Caméra non accessible — utilise la saisie manuelle ci-dessous';
+      if(window._zxingReader){ try{ window._zxingReader.reset(); }catch(ex){} window._zxingReader = null; }
+      hint.textContent = '⚠️ Caméra non accessible — saisis le code ci-dessous';
+      return;
     }
   }
 
-  // ── Stratégie 3 : aucune option dispo ──
-  hint.textContent = 'Scanner non disponible sur ce navigateur — saisis le code manuellement ci-dessous';
+  // ── Stratégie 3 : pas de lib dispo ──
+  hint.textContent = 'Scanner non disponible — saisis le code ci-dessous';
 }
 
 async function stopScanner(){
   scannerRunning = false;
   if(scannerInterval){ clearInterval(scannerInterval); scannerInterval = null; }
+  if(window._zxingReader){ try{ window._zxingReader.reset(); }catch(e){} window._zxingReader = null; }
   if(scannerStream){ scannerStream.getTracks().forEach(t=>t.stop()); scannerStream = null; }
   const video = document.getElementById('scannerVideo');
-  if(video){ video.srcObject = null; video.remove(); }
-  if(html5Scanner){
-    try{ if(html5Scanner.isScanning) await html5Scanner.stop(); }catch(e){}
-    html5Scanner = null;
-  }
+  if(video){ try{ video.srcObject = null; }catch(e){} video.remove(); }
 }
 
 async function lookupManualBarcode(){
   const code = (document.getElementById('manualBarcodeInput').value||'').trim();
-  if(!code||code.length < 6){ showToast('⚠️ Code-barres invalide'); return; }
+  if(!code || code.length < 6){ showToast('⚠️ Code-barres invalide'); return; }
   handleBarcode(code);
 }
 
@@ -2555,17 +2727,28 @@ function renderFoodDb(){
   c.innerHTML=foods.slice(0,50).map(f=>{
     const isCustom=customFoods.some(cf=>cf.name===f.name);
     const n=f.name.replace(/'/g,"\\'");
-    return `<div class="flist-item">
-      <div class="flist-left">
-        <div class="flist-name">${f.name}${isCustom?'<span style="font-size:9px;background:var(--primary-soft);color:var(--primary-dark);border-radius:6px;padding:1px 5px;margin-left:5px;font-weight:700">perso</span>':''}</div>
-        <div class="flist-meta">${f.cat} · ${unitLbl(f)} · P:${f.prot}g G:${f.carb}g L:${f.fat}g</div>
+    const fs=JSON.stringify(f).replace(/"/g,'&quot;');
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="flist-left" ${!isCustom?`onclick="pickFood(${fs})" style="cursor:pointer"`:''}>
+          <div class="flist-name">${f.name}${isCustom?'<span style="font-size:9px;background:var(--primary-soft);color:var(--primary-dark);border-radius:6px;padding:1px 5px;margin-left:5px;font-weight:700">perso</span>':''}</div>
+          <div class="flist-meta">${f.cat} · ${unitLbl(f)} · P:${f.prot}g G:${f.carb}g L:${f.fat}g</div>
+        </div>
+        <div class="flist-right">
+          <span class="flist-cal">${f.cal} kcal</span>
+          <button class="fav-btn" onclick="toggleFavDb2('${n}')">${favIds.includes(f.name)?'⭐':'☆'}</button>
+        </div>
       </div>
-      <div class="flist-right" style="gap:4px">
-        <span class="flist-cal">${f.cal} kcal</span>
-        <button class="fav-btn" onclick="toggleFavDb2('${n}')">${favIds.includes(f.name)?'⭐':'☆'}</button>
-        ${isCustom?`<button onclick="openEditFoodModal('${n}')" style="background:none;border:none;font-size:15px;cursor:pointer;padding:2px 4px" title="Modifier">✏️</button>
-        <button onclick="deleteCustomFood('${n}')" style="background:none;border:none;font-size:15px;cursor:pointer;padding:2px 4px" title="Supprimer">🗑️</button>`:''}
-      </div>
+      ${isCustom?`<div style="display:flex;gap:8px;margin-top:8px">
+        <button onclick="openEditFoodModal('${n}')"
+          style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--border);background:var(--card2);font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">
+          ✏️ Modifier
+        </button>
+        <button onclick="deleteCustomFood('${n}')"
+          style="flex:1;padding:8px;border-radius:10px;border:1px solid rgba(244,67,54,.3);background:rgba(244,67,54,.08);font-size:13px;font-weight:600;cursor:pointer;color:var(--red)">
+          🗑️ Supprimer
+        </button>
+      </div>`:''}
     </div>`;
   }).join('');
 }
@@ -2620,13 +2803,12 @@ function openEditFoodModal(name){
 }
 
 function deleteCustomFood(name){
-  if(!confirm(`Supprimer "${name}" de ta base ?`)) return;
   const idx = customFoods.findIndex(cf => cf.name === name);
   if(idx < 0) return;
   customFoods.splice(idx, 1);
   localStorage.setItem('zth3_custom', JSON.stringify(customFoods));
   renderFoodDb();
-  showToast('🗑️ Aliment supprimé');
+  showToast('🗑️ "' + name + '" supprimé');
 }
 
 function updateDbUnitLabel(){
@@ -2673,6 +2855,157 @@ function saveDbFood(){
 
 // ── HISTORIQUE ──
 function setPeriod(days,btn){ histPeriod=days; document.querySelectorAll('.period-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderHistory(); }
+
+// ── BILAN HEBDOMADAIRE ──
+function renderWeeklyBilan(){
+  const el=document.getElementById('weeklyBilan');
+  if(!el) return;
+
+  const DAY_SHORT=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  const days7=[];
+  for(let i=6;i>=0;i--) days7.push(dateKey(-i));
+
+  // Compute stats
+  const data7=days7.map(k=>({k,t:totals(k)}));
+  const tracked=data7.filter(d=>d.t.cal>50);
+  const trackedDays=tracked.length;
+  const daysLogged=trackedDays;
+
+  if(daysLogged===0){
+    el.innerHTML=`<div class="bilan-card">
+      <div class="bilan-header"><div class="bilan-title">📊 Bilan de la semaine</div></div>
+      <div style="text-align:center;padding:16px 0;color:var(--text2);font-size:13px">Aucune donnée cette semaine.<br>Commence à logger tes repas !</div>
+    </div>`;
+    return;
+  }
+
+  // Avg macros (only days with data)
+  const avgCal=Math.round(tracked.reduce((s,d)=>s+d.t.cal,0)/daysLogged);
+  const avgProt=Math.round(tracked.reduce((s,d)=>s+d.t.prot,0)/daysLogged);
+  const avgCarb=Math.round(tracked.reduce((s,d)=>s+d.t.carb,0)/daysLogged);
+  const avgFat=Math.round(tracked.reduce((s,d)=>s+d.t.fat,0)/daysLogged);
+
+  // Best day
+  const best=data7.reduce((b,d)=>d.t.cal>b.t.cal?d:b,data7[0]);
+  const bestDate=new Date(best.k+'T12:00');
+  const bestDayName=bestDate.toLocaleDateString('fr-FR',{weekday:'long'});
+  const bestDayName2=bestDayName.charAt(0).toUpperCase()+bestDayName.slice(1);
+
+  // Consistance score
+  const score=daysLogged;
+  const circumference=2*Math.PI*28;
+  const scoreFill=circumference*(1-score/7);
+  const scoreColor=score>=6?'var(--primary)':score>=4?'var(--orange)':'var(--red)';
+
+  // Days dots
+  const dotsHtml=data7.map(d=>{
+    const date=new Date(d.k+'T12:00');
+    const dayName=DAY_SHORT[date.getDay()];
+    const ratio=d.t.cal/Math.max(goals.cal,1);
+    let cls='empty'; let icon='—';
+    if(d.t.cal>50){
+      icon=ratio<=1.1?'✓':'!';
+      cls=ratio>=0.8&&ratio<=1.1?'ok':ratio>1.1?'over':'low';
+    }
+    return `<div class="bilan-dot ${cls}">
+      <div class="bilan-dot-circle">${icon}</div>
+      <div class="bilan-dot-lbl">${dayName}</div>
+    </div>`;
+  }).join('');
+
+  // Macro bars
+  const pctProt=Math.min(Math.round(avgProt/Math.max(goals.prot,1)*100),130);
+  const pctCarb=Math.min(Math.round(avgCarb/Math.max(goals.carb,1)*100),130);
+  const pctFat=Math.min(Math.round(avgFat/Math.max(goals.fat,1)*100),130);
+  const pctCalBar=Math.min(Math.round(avgCal/Math.max(goals.cal,1)*100),130);
+  const barColor=p=>p>110?'var(--red)':p>=80?'var(--primary)':'var(--orange)';
+
+  // Tone-based message
+  const toneMsgs={
+    zen:{
+      great:`🌿 Belle semaine ! Tu as tracké ${score}/7 jours avec une moyenne de ${fmt(avgCal)} kcal. Continue comme ça.`,
+      ok:`📋 ${score}/7 jours tracké${score>1?'s':''}. Moyenne à ${fmt(avgCal)} kcal. Quelques jours manquants — l'habitude se construit.`,
+      poor:`🌱 ${score}/7 jours seulement. Pas d'inquiétude, chaque jour tracké est un progrès. Reprends à ton rythme.`
+    },
+    coach:{
+      great:`💥 ${score}/7 jours, ${fmt(avgCal)} kcal en moyenne — tu joues le jeu ! Maintiens cette discipline.`,
+      ok:`⚡ ${score}/7 jours. Bien, mais on peut faire mieux. Les jours non tracés sont les jours perdus. Concentre-toi !`,
+      poor:`🚨 Seulement ${score}/7 jours ! La consistance, c'est la base. Cette semaine tu reviens fort — promis ?`
+    },
+    sarcastique:{
+      great:`Wow, ${score}/7 jours ! T'as même réussi à ne pas oublier l'appli. Respect. Moyenne : ${fmt(avgCal)} kcal — presque comme un adulte.`,
+      ok:`${score}/7 jours… t'as oublié ou t'avais "pas le temps" les autres jours ? Bon, au moins t'as essayé.`,
+      poor:`${score}/7 jours tracké${score>1?'s':''}. Bravo pour l'effort… ou pas. Mais bon, y'a une prochaine semaine.`
+    },
+    drill:{
+      great:`RÉSULTAT : ${score}/7 JOURS. ${fmt(avgCal)} KCAL MOYENNE. DISCIPLINE EXEMPLAIRE. REPOS MÉRITÉ.`,
+      ok:`${score}/7 JOURS SEULEMENT. INSUFFISANT. TU PEUX MIEUX FAIRE. SEMAINE PROCHAINE : 7/7. PAS D'EXCUSES.`,
+      poor:`${score}/7 JOURS. INACCEPTABLE. LA RÉGULARITÉ C'EST LA VICTOIRE. RECOMMENCE. MAINTENANT.`
+    }
+  };
+  const level=score>=6?'great':score>=4?'ok':'poor';
+  const msgs=toneMsgs[toneMode]||toneMsgs.zen;
+  const toneMsg=msgs[level];
+
+  // Week range label
+  const from=new Date(days7[0]+'T12:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+  const to=new Date(days7[6]+'T12:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+
+  el.innerHTML=`<div class="bilan-card">
+    <div class="bilan-header">
+      <div class="bilan-title">📊 Bilan de la semaine</div>
+      <div class="bilan-week-lbl">${from} – ${to}</div>
+    </div>
+    <div class="bilan-score-row">
+      <div class="bilan-score-circle">
+        <svg width="72" height="72" viewBox="0 0 72 72">
+          <circle cx="36" cy="36" r="28" fill="none" stroke="var(--border)" stroke-width="8"/>
+          <circle cx="36" cy="36" r="28" fill="none" stroke="${scoreColor}" stroke-width="8"
+            stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${scoreFill.toFixed(1)}"
+            stroke-linecap="round"/>
+        </svg>
+        <div class="bilan-score-text">
+          <div class="bilan-score-num">${score}</div>
+          <div class="bilan-score-den">/ 7</div>
+        </div>
+      </div>
+      <div>
+        <div class="bilan-score-label">Score de consistance</div>
+        <div class="bilan-score-sub">${score>=6?'🏆 Excellent !':score>=4?'👍 Bien':score>=2?'⚠️ À améliorer':'🔴 Faible'}</div>
+        <div class="bilan-score-sub" style="margin-top:4px">Moy. ${fmt(avgCal)} kcal / jour</div>
+      </div>
+    </div>
+    <div class="bilan-days-dots">${dotsHtml}</div>
+    <div class="bilan-macros">
+      <div class="bilan-macro-row">
+        <span class="bilan-macro-icon">🔥</span>
+        <span class="bilan-macro-name">Calories</span>
+        <div class="bilan-macro-bar-bg"><div class="bilan-macro-bar" style="width:${pctCalBar}%;background:${barColor(pctCalBar)}"></div></div>
+        <span class="bilan-macro-val">${fmt(avgCal)} <span style="font-size:10px;color:var(--text2)">/ ${fmt(goals.cal)}</span></span>
+      </div>
+      <div class="bilan-macro-row">
+        <span class="bilan-macro-icon">💪</span>
+        <span class="bilan-macro-name">Protéines</span>
+        <div class="bilan-macro-bar-bg"><div class="bilan-macro-bar" style="width:${pctProt}%;background:${barColor(pctProt)}"></div></div>
+        <span class="bilan-macro-val">${avgProt}g <span style="font-size:10px;color:var(--text2)">/ ${goals.prot}g</span></span>
+      </div>
+      <div class="bilan-macro-row">
+        <span class="bilan-macro-icon">🍞</span>
+        <span class="bilan-macro-name">Glucides</span>
+        <div class="bilan-macro-bar-bg"><div class="bilan-macro-bar" style="width:${pctCarb}%;background:${barColor(pctCarb)}"></div></div>
+        <span class="bilan-macro-val">${avgCarb}g <span style="font-size:10px;color:var(--text2)">/ ${goals.carb}g</span></span>
+      </div>
+      <div class="bilan-macro-row">
+        <span class="bilan-macro-icon">🥑</span>
+        <span class="bilan-macro-name">Lipides</span>
+        <div class="bilan-macro-bar-bg"><div class="bilan-macro-bar" style="width:${pctFat}%;background:${barColor(pctFat)}"></div></div>
+        <span class="bilan-macro-val">${avgFat}g <span style="font-size:10px;color:var(--text2)">/ ${goals.fat}g</span></span>
+      </div>
+    </div>
+    ${best.t.cal>50?`<div class="bilan-best-day">🏆 Meilleur jour : <span style="color:var(--orange);margin-left:4px">${bestDayName2}</span><span style="margin-left:auto;font-size:13px;font-weight:900;color:var(--primary-dark)">${fmt(Math.round(best.t.cal))} kcal</span></div>`:''}
+    <div class="bilan-tone-msg">${toneMsg}</div>
+  </div>`;
+}
 
 function renderHistory(){
   const labels=[],calData=[],protData=[],carbData=[],fatData=[];
@@ -3294,7 +3627,7 @@ function init(){
   if(!onboarded){ document.getElementById('onboarding').classList.remove('hidden'); calcTDEELive(); }
   else document.getElementById('onboarding').classList.add('hidden');
   refreshDateUI(); renderToday(); renderCalStrip();
-  ['mealModal','saveMealModal','dbModal','quickAddModal','editQtyModal','savedMealDestModal','weightModal','feedbackModal'].forEach(id=>{
+  ['mealModal','saveMealModal','dbModal','quickAddModal','editQtyModal','savedMealDestModal','weightModal','feedbackModal','editMealModal'].forEach(id=>{
     document.getElementById(id).addEventListener('click',function(e){ if(e.target===this) closeModal(id); });
   });
 }
