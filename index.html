@@ -62,7 +62,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .meal-right{display:flex;align-items:center;gap:8px}
 .add-btn{width:30px;height:30px;background:var(--primary);border:none;border-radius:50%;color:white;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .1s}
 .add-btn:active{transform:scale(.9)}
-.chevron{color:var(--text2);font-size:12px;transition:transform .25s}
+.chevron{color:var(--text2);font-size:18px;transition:transform .25s}
 .chevron.open{transform:rotate(180deg)}
 .meal-body{display:none;background:var(--card);padding:0 15px 8px;border-top:1px solid var(--border)}
 .meal-body.open{display:block}
@@ -91,7 +91,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .save-meal-btn:active{background:var(--border);opacity:1}
 .menu-profile-banner{background:var(--primary-soft);border-radius:12px;padding:9px 12px;font-size:12px;color:var(--primary-dark);font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .menu-profile-banner span{opacity:.8;font-weight:400}
-.accord-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;background:var(--card)}
+.accord-header{display:flex;align-items:center;justify-content:space-between;padding:18px 16px;cursor:pointer;user-select:none;background:var(--card)}
 .accord-header:active{background:var(--card2)}
 .accord-title{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px}
 .accord-body{display:none;padding:0 16px 14px;border-top:1px solid var(--border)}
@@ -264,9 +264,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 @keyframes spin{to{transform:rotate(360deg)}}
 .off-result-found{background:var(--primary-soft);border-radius:12px;padding:11px 13px;margin-bottom:8px;font-size:12px;color:var(--primary-dark);font-weight:600;line-height:1.6}
 /* ══ SCANNER ══ */
-.scanner-wrap{text-align:center;padding:12px 0}
-.scanner-box{border-radius:14px;overflow:hidden;background:#000;width:100%;aspect-ratio:1;display:none;position:relative;margin-bottom:10px}
-.scanner-hint{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5}
+.scanner-wrap{text-align:center;padding:8px 0}
+.scanner-box{border-radius:14px;overflow:hidden;background:#111;width:100%;aspect-ratio:4/3;display:block;position:relative;margin-bottom:6px;min-height:220px}
+.scanner-box video{width:100%;height:100%;object-fit:cover;display:block}
+.scanner-hint{font-size:12px;color:var(--text2);line-height:1.5;min-height:18px}
+.scan-frame{position:absolute;inset:12%;border:2.5px solid rgba(255,255,255,0.85);border-radius:10px;pointer-events:none;z-index:2}
+.scan-frame::before,.scan-frame::after{content:'';position:absolute;width:18px;height:18px;border-color:var(--primary);border-style:solid}
+.scan-frame::before{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
+.scan-frame::after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+.scan-line{position:absolute;left:12%;right:12%;height:2.5px;background:linear-gradient(90deg,transparent,var(--primary),transparent);border-radius:2px;pointer-events:none;z-index:3;animation:scanMove 2s ease-in-out infinite;top:12%}
+@keyframes scanMove{0%,100%{top:16%}50%{top:82%}}
 </style>
 </head>
 <body>
@@ -436,14 +443,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="card">
       <div class="card-title">📋 Repas sauvegardés</div>
       <div id="savedMealsList"></div>
-      <button class="btn btn-ghost" style="margin-top:10px" onclick="openSaveMealModal()">+ Sauvegarder le repas du jour</button>
+      <button class="btn btn-ghost" style="margin-top:10px" onclick="openEditMealModal(-1)">+ Créer un repas</button>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <div class="accord-header" onclick="toggleAccord('menuAccord','chevMenuAccord')">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:15px">🍽️</span>
           <span class="accord-title">Menus Types</span>
-          <span style="font-size:10px;color:var(--primary-dark);font-weight:600">· adaptés à ton objectif !</span>
         </div>
         <span class="chevron" id="chevMenuAccord">▾</span>
       </div>
@@ -670,11 +676,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <!-- ═══ ONGLET SCANNER ═══ -->
     <div class="tab-content" id="tscan">
       <div class="scanner-wrap">
-        <p class="scanner-hint">Scanne le code-barres d'un produit.<br>Les infos nutritionnelles s'affichent automatiquement.</p>
-        <div class="scanner-box" id="scannerBox"></div>
-        <button class="btn btn-primary" id="startScanBtn" onclick="startScanner()">📷 Lancer le scanner</button>
-        <button class="btn btn-ghost" id="stopScanBtn" style="display:none" onclick="stopScanner()">⏹ Arrêter le scanner</button>
+        <div class="scanner-box" id="scannerBox">
+          <div class="scan-frame" id="scanFrame"></div>
+          <div class="scan-line" id="scanLine"></div>
+        </div>
+        <p class="scanner-hint" id="scannerHint" style="margin-top:8px">Démarrage de la caméra…</p>
         <div id="scanResult"></div>
+        <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+          <div style="font-size:11px;color:var(--text2);text-align:center;margin-bottom:7px">Code non détecté ? Saisis-le manuellement ↓</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="number" class="form-input" id="manualBarcodeInput" placeholder="Ex : 3017620429484" style="font-size:13px;flex:1">
+            <button class="btn btn-primary" style="padding:0 16px;height:44px;flex-shrink:0" onclick="lookupManualBarcode()">🔍</button>
+          </div>
+        </div>
       </div>
     </div>
     <!-- ═══ BLOC QUANTITÉ — commun à tous les onglets ═══ -->
@@ -774,11 +788,45 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
+<!-- MODAL : CRÉER / MODIFIER UN REPAS SAUVEGARDÉ -->
+<div class="overlay" id="editMealModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="editMealTitle">Créer un repas</div>
+    <div class="form-group">
+      <label class="form-label">Nom du repas</label>
+      <input type="text" class="form-input" id="editMealName" placeholder="Ex : Mon petit déj habituel">
+    </div>
+    <!-- Liste des ingrédients -->
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.4px">Ingrédients</div>
+    <div id="editMealItems" style="max-height:190px;overflow-y:auto;margin-bottom:10px"></div>
+    <!-- Ajouter un aliment -->
+    <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px">
+      <div class="search-bar" style="margin-bottom:8px">
+        <span style="color:var(--text2)">🔍</span>
+        <input type="text" placeholder="Ajouter un aliment…" id="editMealSearch" oninput="searchEditMeal()">
+      </div>
+      <div id="editMealSearchResults" style="max-height:140px;overflow-y:auto"></div>
+      <div id="editMealPending" style="display:none;background:var(--primary-soft);border-radius:10px;padding:9px 11px;margin-top:6px">
+        <div id="editMealPendingName" style="font-size:13px;font-weight:600;color:var(--primary-dark);margin-bottom:6px"></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" class="form-input" id="editMealQtyInput" value="100" min="0.5" step="5" style="width:80px;flex-shrink:0" oninput="updateEditPendingPreview()">
+          <span id="editMealQtyUnit" style="font-size:12px;color:var(--text2);flex-shrink:0">g</span>
+          <span id="editMealPendingPreview" style="font-size:11px;color:var(--text2);flex:1"></span>
+          <button class="saved-add-btn" onclick="confirmAddToEditMeal()">✓ Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveEditMeal()">💾 Sauvegarder</button>
+    <button class="btn btn-ghost" onclick="closeModal('editMealModal')">Annuler</button>
+  </div>
+</div>
+
 <!-- MODAL : NOUVEL ALIMENT (BASE) -->
 <div class="overlay" id="dbModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Nouvel aliment</div>
+    <div class="modal-title" id="dbModalTitle">Nouvel aliment</div>
     <div class="form-group">
       <label class="form-label">Nom</label>
       <input type="text" class="form-input" id="dbName" placeholder="Ex : Riz cuit">
@@ -1804,6 +1852,7 @@ function switchTab(tabId,btn){
   document.querySelectorAll('#mealModal .tab-content').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active'); document.getElementById(tabId).classList.add('active');
   if(tabId==='tresto') initRestoTab();
+  if(tabId==='tscan') setTimeout(startScanner, 200); // léger délai pour que le DOM soit prêt
 }
 
 // ── RÉCENTS ACCUEIL ──
@@ -2089,46 +2138,111 @@ function searchOFF(){
   },600);
 }
 
-// ── SCANNER CODE-BARRES ──
-let html5Scanner=null;
+// ── SCANNER CODE-BARRES (v2 — BarcodeDetector + fallback html5-qrcode) ──
+let scannerStream = null;
+let scannerInterval = null;
+let html5Scanner = null;
+let scannerRunning = false;
 
 async function startScanner(){
-  const box=document.getElementById('scannerBox');
-  const startBtn=document.getElementById('startScanBtn');
-  const stopBtn=document.getElementById('stopScanBtn');
+  if(scannerRunning) return;
+  const box = document.getElementById('scannerBox');
+  const hint = document.getElementById('scannerHint');
   if(!box) return;
-  box.style.display='block';
-  startBtn.style.display='none';
-  stopBtn.style.display='block';
-  document.getElementById('scanResult').innerHTML='';
-  box.innerHTML='';
-  try{
-    html5Scanner=new Html5Qrcode('scannerBox');
-    await html5Scanner.start(
-      {facingMode:'environment'},
-      {fps:10,qrbox:{width:220,height:220}},
-      (code)=>handleBarcode(code),
-      ()=>{}
-    );
-  }catch(e){
-    box.style.display='none';
-    startBtn.style.display='block';
-    stopBtn.style.display='none';
-    showToast("⚠️ Impossible d'accéder à la caméra");
+
+  document.getElementById('scanResult').innerHTML = '';
+  hint.textContent = 'Démarrage de la caméra…';
+
+  // ── Stratégie 1 : BarcodeDetector natif (iOS 17+, Chrome Android) ──
+  if('BarcodeDetector' in window){
+    try{
+      scannerStream = await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}
+      });
+      // Créer/réutiliser l'élément vidéo
+      let video = document.getElementById('scannerVideo');
+      if(!video){
+        video = document.createElement('video');
+        video.id = 'scannerVideo';
+        video.autoplay = true;
+        video.muted = true;
+        video.setAttribute('playsinline','');   // CRITIQUE pour iOS Safari
+        video.setAttribute('webkit-playsinline','');
+        video.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:12px;display:block';
+        box.insertBefore(video, box.firstChild);
+      }
+      video.srcObject = scannerStream;
+      await video.play();
+      scannerRunning = true;
+      hint.textContent = 'Pointez vers un code-barres…';
+
+      const detector = new BarcodeDetector({
+        formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf']
+      });
+      scannerInterval = setInterval(async()=>{
+        if(!video.videoWidth || !scannerRunning) return;
+        try{
+          const codes = await detector.detect(video);
+          if(codes.length > 0){
+            clearInterval(scannerInterval); scannerInterval = null;
+            handleBarcode(codes[0].rawValue);
+          }
+        }catch(e){}
+      }, 150); // ~6 fps — très réactif
+      return;
+    }catch(e){
+      // Caméra refusée — passer en fallback manuel
+      hint.textContent = '⚠️ Caméra non accessible — utilise la saisie manuelle ci-dessous';
+      return;
+    }
   }
+
+  // ── Stratégie 2 : html5-qrcode (iOS < 17, autres navigateurs) ──
+  if(typeof Html5Qrcode !== 'undefined'){
+    // Vider la box des éventuels résidus vidéo natifs
+    const oldVideo = document.getElementById('scannerVideo');
+    if(oldVideo) oldVideo.remove();
+    try{
+      html5Scanner = new Html5Qrcode('scannerBox');
+      await html5Scanner.start(
+        {facingMode:{ideal:'environment'}},
+        {
+          fps: 20,
+          // Pas de qrbox : scan toute la surface
+          experimentalFeatures:{useBarCodeDetectorIfSupported:true},
+          aspectRatio: 1.33
+        },
+        (code)=>handleBarcode(code),
+        ()=>{}
+      );
+      scannerRunning = true;
+      hint.textContent = 'Pointez vers un code-barres…';
+      return;
+    }catch(e){
+      hint.textContent = '⚠️ Caméra non accessible — utilise la saisie manuelle ci-dessous';
+    }
+  }
+
+  // ── Stratégie 3 : aucune option dispo ──
+  hint.textContent = 'Scanner non disponible sur ce navigateur — saisis le code manuellement ci-dessous';
 }
 
 async function stopScanner(){
-  try{
-    if(html5Scanner&&html5Scanner.isScanning){ await html5Scanner.stop(); }
-  }catch(e){}
-  html5Scanner=null;
-  const box=document.getElementById('scannerBox');
-  const startBtn=document.getElementById('startScanBtn');
-  const stopBtn=document.getElementById('stopScanBtn');
-  if(box){ box.style.display='none'; box.innerHTML=''; }
-  if(startBtn) startBtn.style.display='block';
-  if(stopBtn) stopBtn.style.display='none';
+  scannerRunning = false;
+  if(scannerInterval){ clearInterval(scannerInterval); scannerInterval = null; }
+  if(scannerStream){ scannerStream.getTracks().forEach(t=>t.stop()); scannerStream = null; }
+  const video = document.getElementById('scannerVideo');
+  if(video){ video.srcObject = null; video.remove(); }
+  if(html5Scanner){
+    try{ if(html5Scanner.isScanning) await html5Scanner.stop(); }catch(e){}
+    html5Scanner = null;
+  }
+}
+
+async function lookupManualBarcode(){
+  const code = (document.getElementById('manualBarcodeInput').value||'').trim();
+  if(!code||code.length < 6){ showToast('⚠️ Code-barres invalide'); return; }
+  handleBarcode(code);
 }
 
 async function handleBarcode(code){
@@ -2240,6 +2354,7 @@ function renderSavedMeals(){
       </div>
       <div style="display:flex;gap:6px;align-items:center">
         <button class="saved-add-btn" onclick="addSavedMeal(${idx})">+ Ajouter</button>
+        <button class="del-btn" onclick="openEditMealModal(${idx})" style="font-size:15px;background:var(--card2);border-radius:8px;padding:4px 7px">✏️</button>
         <button class="del-btn" onclick="deleteSavedMeal(${idx})" style="font-size:16px">×</button>
       </div>
     </div>`).join('');
@@ -2307,6 +2422,128 @@ function confirmAddSavedMeal(dest){
 
 function deleteSavedMeal(idx){ savedMeals.splice(idx,1); saveSaved(); renderSavedMeals(); showToast('Repas supprimé'); }
 
+// ── CRÉER / MODIFIER REPAS SAUVEGARDÉ ──
+let editingMealIdx = -1;
+let editingMealItems = [];
+let editPendingFood = null;
+
+function openEditMealModal(idx){
+  editingMealIdx = idx;
+  editPendingFood = null;
+  document.getElementById('editMealSearch').value = '';
+  document.getElementById('editMealSearchResults').innerHTML = '';
+  document.getElementById('editMealPending').style.display = 'none';
+  if(idx === -1){
+    document.getElementById('editMealTitle').textContent = '➕ Créer un repas';
+    document.getElementById('editMealName').value = '';
+    editingMealItems = [];
+  } else {
+    const sm = savedMeals[idx];
+    document.getElementById('editMealTitle').textContent = '✏️ Modifier le repas';
+    document.getElementById('editMealName').value = sm.name;
+    editingMealItems = sm.items.map(i => ({...i}));
+  }
+  renderEditMealItems();
+  document.getElementById('editMealModal').classList.add('open');
+}
+
+function renderEditMealItems(){
+  const c = document.getElementById('editMealItems');
+  if(!editingMealItems.length){
+    c.innerHTML = '<div style="font-size:12px;color:var(--text2);text-align:center;padding:12px">Aucun ingrédient — utilise la recherche ci-dessous</div>';
+    return;
+  }
+  c.innerHTML = editingMealItems.map((item, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.name}</div>
+        <div style="font-size:11px;color:var(--text2)">${item.qty} · ${Math.round(item.cal)} kcal</div>
+      </div>
+      <button onclick="removeEditMealItem(${i})" style="background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;flex-shrink:0;padding:0 4px;line-height:1">×</button>
+    </div>`).join('');
+  const total = Math.round(editingMealItems.reduce((s,i) => s + i.cal, 0));
+  c.innerHTML += `<div style="font-size:12px;color:var(--primary-dark);font-weight:700;text-align:right;padding-top:6px">Total : ${total} kcal</div>`;
+}
+
+function removeEditMealItem(i){
+  editingMealItems.splice(i, 1);
+  renderEditMealItems();
+}
+
+function searchEditMeal(){
+  editPendingFood = null;
+  document.getElementById('editMealPending').style.display = 'none';
+  const q = (document.getElementById('editMealSearch').value || '').trim().toLowerCase();
+  const c = document.getElementById('editMealSearchResults');
+  if(q.length < 2){ c.innerHTML = ''; return; }
+  const results = allFoods().filter(f => f.name.toLowerCase().includes(q)).slice(0, 10);
+  if(!results.length){ c.innerHTML = '<div style="font-size:12px;color:var(--text2);padding:6px">Aucun résultat</div>'; return; }
+  c.innerHTML = results.map(f =>
+    `<div onclick="selectEditFood('${f.name.replace(/'/g,"\\'")}',this)"
+      style="padding:8px 10px;border-radius:9px;margin-bottom:4px;cursor:pointer;background:var(--card);border:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:600">${f.name}</div>
+      <div style="font-size:11px;color:var(--text2)">${f.base===1?'à l\'unité':'pour 100'+f.unit} · ${f.cal} kcal</div>
+    </div>`
+  ).join('');
+}
+
+function selectEditFood(name, el){
+  document.querySelectorAll('#editMealSearchResults > div').forEach(e => e.style.background = 'var(--card)');
+  el.style.background = 'var(--primary-soft)';
+  editPendingFood = allFoods().find(f => f.name === name);
+  if(!editPendingFood) return;
+  const isUnit = editPendingFood.base === 1;
+  document.getElementById('editMealPendingName').textContent = editPendingFood.name;
+  document.getElementById('editMealQtyInput').value = isUnit ? '1' : '100';
+  document.getElementById('editMealQtyInput').step = isUnit ? '1' : '10';
+  document.getElementById('editMealQtyUnit').textContent = isUnit ? editPendingFood.unit : editPendingFood.unit || 'g';
+  document.getElementById('editMealPending').style.display = '';
+  updateEditPendingPreview();
+}
+
+function updateEditPendingPreview(){
+  if(!editPendingFood) return;
+  const qty = parseFloat(document.getElementById('editMealQtyInput').value) || 0;
+  const r = editPendingFood.base === 1 ? qty : qty / 100;
+  document.getElementById('editMealPendingPreview').textContent =
+    `🔥 ${Math.round(editPendingFood.cal*r)} kcal · 💪${Math.round(editPendingFood.prot*r)}g · 🍞${Math.round(editPendingFood.carb*r)}g · 🥑${Math.round(editPendingFood.fat*r)}g`;
+}
+
+function confirmAddToEditMeal(){
+  if(!editPendingFood) return;
+  const qty = parseFloat(document.getElementById('editMealQtyInput').value) || 1;
+  const r = editPendingFood.base === 1 ? qty : qty / 100;
+  const unit = editPendingFood.unit || 'g';
+  const qtyLabel = editPendingFood.base === 1 ? `${qty} ${unit}` : `${qty}${unit}`;
+  editingMealItems.push({
+    name: editPendingFood.name,
+    qty: qtyLabel,
+    cal:  Math.round(editPendingFood.cal  * r * 10) / 10,
+    prot: Math.round(editPendingFood.prot * r * 10) / 10,
+    carb: Math.round(editPendingFood.carb * r * 10) / 10,
+    fat:  Math.round(editPendingFood.fat  * r * 10) / 10,
+  });
+  editPendingFood = null;
+  document.getElementById('editMealPending').style.display = 'none';
+  document.getElementById('editMealSearch').value = '';
+  document.getElementById('editMealSearchResults').innerHTML = '';
+  renderEditMealItems();
+}
+
+function saveEditMeal(){
+  const name = document.getElementById('editMealName').value.trim();
+  if(!name){ showToast('⚠️ Donne un nom au repas'); return; }
+  if(!editingMealItems.length){ showToast('⚠️ Ajoute au moins un aliment'); return; }
+  const meal = {name, items: editingMealItems.map(i => ({...i}))};
+  if(editingMealIdx === -1){
+    savedMeals.push(meal);
+  } else {
+    savedMeals[editingMealIdx] = meal;
+  }
+  saveSaved(); renderSavedMeals(); closeModal('editMealModal');
+  showToast(editingMealIdx === -1 ? '✅ Repas créé !' : '✅ Repas modifié !');
+}
+
 // ── BASE ALIMENTS ──
 function renderFoodDb(){
   const q=(document.getElementById('foodSearch').value||'').toLowerCase();
@@ -2315,23 +2552,30 @@ function renderFoodDb(){
   const c=document.getElementById('foodDbList');
   const unitLbl=f=>f.base===1?`par ${f.unit}`:`/ 100${f.unit||'g'}`;
   if(!foods.length){ c.innerHTML='<div class="empty-meal">Aucun aliment trouvé</div>'; return; }
-  c.innerHTML=foods.slice(0,50).map(f=>`
-    <div class="flist-item">
+  c.innerHTML=foods.slice(0,50).map(f=>{
+    const isCustom=customFoods.some(cf=>cf.name===f.name);
+    const n=f.name.replace(/'/g,"\\'");
+    return `<div class="flist-item">
       <div class="flist-left">
-        <div class="flist-name">${f.name}</div>
+        <div class="flist-name">${f.name}${isCustom?'<span style="font-size:9px;background:var(--primary-soft);color:var(--primary-dark);border-radius:6px;padding:1px 5px;margin-left:5px;font-weight:700">perso</span>':''}</div>
         <div class="flist-meta">${f.cat} · ${unitLbl(f)} · P:${f.prot}g G:${f.carb}g L:${f.fat}g</div>
       </div>
-      <div class="flist-right">
+      <div class="flist-right" style="gap:4px">
         <span class="flist-cal">${f.cal} kcal</span>
-        <button class="fav-btn" onclick="toggleFavDb2('${f.name.replace(/'/g,"\\'")}')">
-          ${favIds.includes(f.name)?'⭐':'☆'}
-        </button>
+        <button class="fav-btn" onclick="toggleFavDb2('${n}')">${favIds.includes(f.name)?'⭐':'☆'}</button>
+        ${isCustom?`<button onclick="openEditFoodModal('${n}')" style="background:none;border:none;font-size:15px;cursor:pointer;padding:2px 4px" title="Modifier">✏️</button>
+        <button onclick="deleteCustomFood('${n}')" style="background:none;border:none;font-size:15px;cursor:pointer;padding:2px 4px" title="Supprimer">🗑️</button>`:''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function toggleFavDb2(name){ const idx=favIds.indexOf(name); if(idx>=0) favIds.splice(idx,1); else favIds.unshift(name); saveFavs(); renderFoodDb(); renderFavsList(); showToast(favIds.includes(name)?'⭐ Ajouté':'Retiré des favoris'); }
+let dbEditingName = null; // null = création, sinon = nom de l'aliment à éditer
+
 function openDbModal(){
+  dbEditingName = null;
+  document.getElementById('dbModalTitle').textContent = 'Nouvel aliment';
   document.getElementById('dbName').value='';
   document.getElementById('dbCal').value='';
   document.getElementById('dbProt').value='';
@@ -2342,6 +2586,47 @@ function openDbModal(){
   document.getElementById('dbUnitNameRow').style.display='none';
   document.getElementById('dbUnitHint').textContent='Valeurs pour 100 g';
   document.getElementById('dbModal').classList.add('open');
+}
+
+function openEditFoodModal(name){
+  const f = customFoods.find(cf => cf.name === name);
+  if(!f) return;
+  dbEditingName = name;
+  document.getElementById('dbModalTitle').textContent = 'Modifier l\'aliment';
+  document.getElementById('dbName').value = f.name;
+  document.getElementById('dbCal').value = f.cal;
+  document.getElementById('dbProt').value = f.prot || 0;
+  document.getElementById('dbCarb').value = f.carb || 0;
+  document.getElementById('dbFat').value = f.fat || 0;
+  // Restituer le type d'unité
+  if(f.base === 1){
+    document.getElementById('dbUnitType').value = 'unit';
+    document.getElementById('dbUnitName').value = f.unit || 'unité';
+    document.getElementById('dbUnitNameRow').style.display = 'block';
+    document.getElementById('dbUnitHint').textContent = 'Valeurs pour 1 unité';
+  } else if(f.unit === 'ml'){
+    document.getElementById('dbUnitType').value = '100ml';
+    document.getElementById('dbUnitNameRow').style.display = 'none';
+    document.getElementById('dbUnitHint').textContent = 'Valeurs pour 100 ml';
+  } else {
+    document.getElementById('dbUnitType').value = '100g';
+    document.getElementById('dbUnitNameRow').style.display = 'none';
+    document.getElementById('dbUnitHint').textContent = 'Valeurs pour 100 g';
+  }
+  // Catégorie
+  const catSel = document.getElementById('dbCat');
+  if(catSel) catSel.value = f.cat || 'Mes aliments';
+  document.getElementById('dbModal').classList.add('open');
+}
+
+function deleteCustomFood(name){
+  if(!confirm(`Supprimer "${name}" de ta base ?`)) return;
+  const idx = customFoods.findIndex(cf => cf.name === name);
+  if(idx < 0) return;
+  customFoods.splice(idx, 1);
+  localStorage.setItem('zth3_custom', JSON.stringify(customFoods));
+  renderFoodDb();
+  showToast('🗑️ Aliment supprimé');
 }
 
 function updateDbUnitLabel(){
@@ -2368,9 +2653,22 @@ function saveDbFood(){
     unit=(document.getElementById('dbUnitName').value.trim()||'unité');
     base=1;
   }
-  customFoods.push({name,cat,cal,prot,carb,fat,unit,base});
-  localStorage.setItem('zth3_custom',JSON.stringify(customFoods));
-  closeModal('dbModal'); renderFoodDb(); showToast('✅ '+name+' ajouté');
+  if(dbEditingName !== null){
+    // Mode édition : mise à jour de l'entrée existante
+    const idx = customFoods.findIndex(cf => cf.name === dbEditingName);
+    if(idx >= 0) customFoods[idx] = {name,cat,cal,prot,carb,fat,unit,base};
+    dbEditingName = null;
+    localStorage.setItem('zth3_custom',JSON.stringify(customFoods));
+    closeModal('dbModal'); renderFoodDb(); showToast('✅ '+name+' modifié');
+  } else {
+    // Mode création
+    if(customFoods.some(cf=>cf.name.toLowerCase()===name.toLowerCase())){
+      showToast('⚠️ Cet aliment existe déjà'); return;
+    }
+    customFoods.push({name,cat,cal,prot,carb,fat,unit,base});
+    localStorage.setItem('zth3_custom',JSON.stringify(customFoods));
+    closeModal('dbModal'); renderFoodDb(); showToast('✅ '+name+' ajouté');
+  }
 }
 
 // ── HISTORIQUE ──
@@ -2557,7 +2855,7 @@ let currentMenuGoal = 'maison';
 const MENU_TEMPLATES = [
   // ── ⚡ VITE FAIT — base ~2000 kcal ──
   // vite_1 : P.déj 517 + Dej 744 + Collation 268 + Dîner 488 = 2017 kcal
-  { id:'vite_1', goal:'vite', name:'Bowl skyr & Poulet express',
+  { id:'vite_1', goal:'vite', name:'Journée Express & Légère',
     meals:{ breakfast:[
       {name:'Skyr',qty:200},{name:"Flocons d'avoine complète",qty:80},{name:'Myrtilles',qty:100},{name:'Miel',qty:15}],
     lunch:[
@@ -2568,7 +2866,7 @@ const MENU_TEMPLATES = [
       {name:'Œuf (moyen)',qty:3},{name:'Pain complet',qty:80},{name:'Fromage frais nature 0%',qty:150}]}
   },
   // vite_2 : P.déj 561 + Dej 678 + Collation 161 + Dîner 560 = 1960 kcal
-  { id:'vite_2', goal:'vite', name:'Porridge lait & Dinde express',
+  { id:'vite_2', goal:'vite', name:'Journée Express & Protéinée',
     meals:{ breakfast:[
       {name:"Flocons d'avoine complète",qty:90},{name:'Lait demi-écrémé',qty:250},{name:'Banane',qty:1}],
     lunch:[
@@ -2579,7 +2877,7 @@ const MENU_TEMPLATES = [
       {name:'Pâtes protéinées',qty:110},{name:'Sauce bolognaise',qty:100},{name:'Emmental râpé',qty:20}]}
   },
   // vite_3 : P.déj 399 + Dej 478 + Collation 293 + Dîner 820 = 1990 kcal
-  { id:'vite_3', goal:'vite', name:'Pain frais & Lentilles minute',
+  { id:'vite_3', goal:'vite', name:'Journée Express & Végétale',
     meals:{ breakfast:[
       {name:'Pain multicéréales',qty:100},{name:'Fromage frais nature 0%',qty:150},{name:'Miel',qty:20}],
     lunch:[
@@ -2591,7 +2889,7 @@ const MENU_TEMPLATES = [
   },
   // ── 🍴 MAISON — base ~2100 kcal ──
   // maison_1 : P.déj 561 + Dej 716 + Collation 250 + Dîner 692 = 2219 kcal
-  { id:'maison_1', goal:'maison', name:'Oatmeal & Poulet courgettes',
+  { id:'maison_1', goal:'maison', name:'Journée Classique & Équilibrée',
     meals:{ breakfast:[
       {name:"Flocons d'avoine complète",qty:80},{name:'Lait demi-écrémé',qty:250},{name:'Banane',qty:1},{name:'Miel',qty:12}],
     lunch:[
@@ -2602,7 +2900,7 @@ const MENU_TEMPLATES = [
       {name:'Pâtes complètes',qty:100},{name:'Viande hachée 5%',qty:150},{name:'Sauce bolognaise',qty:80},{name:'Emmental râpé',qty:15}]}
   },
   // maison_2 : P.déj 553 + Dej 495 + Collation 262 + Dîner 772 = 2082 kcal
-  { id:'maison_2', goal:'maison', name:'Œufs pain & Escalope patates douces',
+  { id:'maison_2', goal:'maison', name:'Journée Gourmande & Rassasiante',
     meals:{ breakfast:[
       {name:'Pain multicéréales',qty:90},{name:'Œuf (moyen)',qty:3},{name:'Fromage blanc nature',qty:150}],
     lunch:[
@@ -2613,7 +2911,7 @@ const MENU_TEMPLATES = [
       {name:'Pâtes complètes',qty:120},{name:'Blanc de poulet rôti',qty:150},{name:'Champignons',qty:150},{name:'Sauce béchamel',qty:60}]}
   },
   // maison_3 : P.déj 675 + Dej 452 + Collation 214 + Dîner 763 = 2104 kcal
-  { id:'maison_3', goal:'maison', name:'Porridge & Dinde lentilles',
+  { id:'maison_3', goal:'maison', name:'Journée Protéinée & Récupération',
     meals:{ breakfast:[
       {name:"Flocons d'avoine complète",qty:90},{name:'Lait entier',qty:200},{name:'Myrtilles',qty:100},{name:'Beurre de cacahuète',qty:25}],
     lunch:[
@@ -2625,7 +2923,7 @@ const MENU_TEMPLATES = [
   },
   // ── 👨‍🍳 CHEF — base ~2200 kcal ──
   // chef_1 : P.déj 628 + Dej 789 + Collation 213 + Dîner 505 = 2135 kcal
-  { id:'chef_1', goal:'chef', name:'Bowl complet & Poulet champignons gratiné',
+  { id:'chef_1', goal:'chef', name:'Journée Raffinée & Complète',
     meals:{ breakfast:[
       {name:"Flocons d'avoine complète",qty:90},{name:'Skyr',qty:150},{name:'Myrtilles',qty:80},{name:'Beurre de cacahuète',qty:20},{name:'Miel',qty:12}],
     lunch:[
@@ -2636,7 +2934,7 @@ const MENU_TEMPLATES = [
       {name:'Patates douces',qty:200},{name:'Viande hachée 5%',qty:160},{name:'Brocoli',qty:150},{name:'Emmental râpé',qty:20}]}
   },
   // chef_2 : P.déj 543 + Dej 484 + Collation 301 + Dîner 855 = 2183 kcal
-  { id:'chef_2', goal:'chef', name:'Œufs gourmands & Dinde sauce béchamel',
+  { id:'chef_2', goal:'chef', name:'Journée Brunch & Dîner Gastronomique',
     meals:{ breakfast:[
       {name:'Pain multicéréales',qty:90},{name:'Œuf (moyen)',qty:3},{name:'Fromage frais nature 0%',qty:100},{name:'Tomate',qty:100},{name:'Miel',qty:10}],
     lunch:[
@@ -2647,7 +2945,7 @@ const MENU_TEMPLATES = [
       {name:'Pâtes complètes',qty:120},{name:'Blanc de poulet rôti',qty:160},{name:'Courgette',qty:150},{name:'Emmental râpé',qty:20},{name:'Sauce bolognaise',qty:60}]}
   },
   // chef_3 : P.déj 685 + Dej 770 + Collation 209 + Dîner 589 = 2253 kcal
-  { id:'chef_3', goal:'chef', name:'Porridge royal & Festin patates-viande',
+  { id:'chef_3', goal:'chef', name:'Journée Royale & Festive',
     meals:{ breakfast:[
       {name:"Flocons d'avoine complète",qty:80},{name:'Lait entier',qty:200},{name:'Banane',qty:1},{name:'Beurre de cacahuète',qty:20},{name:'Myrtilles',qty:80}],
     lunch:[
