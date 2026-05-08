@@ -253,26 +253,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .cal-day-bar{width:28px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:1px}
 .cal-day-fill{height:100%;border-radius:2px;transition:width .4s}
 
-/* ══ SMART SUGGEST ══ */
-.suggest-block{background:var(--card);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
-.suggest-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.suggest-title{font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px}
-.suggest-subtitle{font-size:11px;color:var(--text2);margin-top:2px;font-weight:500}
-.suggest-refresh{background:none;border:none;font-size:16px;cursor:pointer;padding:4px 6px;border-radius:8px;color:var(--text2);transition:transform .3s}
-.suggest-refresh:active{transform:rotate(180deg);background:var(--primary-soft)}
-.suggest-cards{display:flex;flex-direction:column;gap:8px}
-.suggest-card{background:var(--card2);border:1.5px solid var(--border);border-radius:14px;padding:12px 13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.suggest-card:active{border-color:var(--primary);background:var(--primary-soft);transform:scale(.99)}
-.suggest-card-left{flex:1;min-width:0}
-.suggest-card-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.suggest-card-meta{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.4}
-.suggest-card-right{text-align:right;flex-shrink:0}
-.suggest-card-cal{font-size:14px;font-weight:900;color:var(--primary-dark)}
-.suggest-card-prot{font-size:10px;color:var(--blue);font-weight:700;margin-top:1px}
-.suggest-macro-gap{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.suggest-gap-pill{display:inline-flex;align-items:center;gap:3px;background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:var(--text2)}
-.suggest-gap-pill.urgent{background:rgba(33,150,243,.1);border-color:var(--blue);color:var(--blue)}
-.suggest-msg{font-size:12px;color:var(--text2);font-style:italic;text-align:center;padding:6px 0;line-height:1.5}
 /* ══ BILAN HEBDO ══ */
 .bilan-card{background:var(--card);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .bilan-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
@@ -459,7 +439,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       </div>
     </div>
 
-    <div id="smartSuggest"></div>
     <div id="homeRecents"></div>
     <button class="copy-btn" id="copyYestBtn" onclick="copyYesterdayMeals()">
       📋 <span id="copyYestLabel">Copier les repas d'hier</span>
@@ -1833,134 +1812,7 @@ function renderToday(){
     ratio>=1.05?'linear-gradient(135deg,#B71C1C,var(--red))':
     ratio>=0.95?'linear-gradient(135deg,#1B5E20,var(--primary))':
     'linear-gradient(135deg,var(--primary-dark),var(--primary))';
-  renderMeals(); updateStreak(); renderCalStrip(); renderHomeRecents(); updateCopyBtn(); renderSmartSuggest();
-}
-
-// ── SMART SUGGEST ──
-function renderSmartSuggest(){
-  const el=document.getElementById('smartSuggest');
-  if(!el) return;
-
-  // Only show on today
-  if(currentDate!==dateKey(0)){ el.innerHTML=''; return; }
-
-  const t=totals(currentDate);
-  const remCal=goals.cal-t.cal;
-  const remProt=goals.prot-t.prot;
-  const remCarb=goals.carb-t.carb;
-  const remFat=goals.fat-t.fat;
-
-  // Don't show if almost done or over target
-  if(remCal<=100){ el.innerHTML=''; return; }
-
-  // Hour-based context
-  const h=new Date().getHours();
-  const isBreakfast=h>=5&&h<10;
-  const isLunch=h>=11&&h<14;
-  const isDinner=h>=17&&h<22;
-  const isSnack=!isBreakfast&&!isLunch&&!isDinner;
-
-  const mealCtx=isBreakfast?'le petit-déjeuner':isLunch?'le déjeuner':isDinner?'le dîner':'un snack';
-
-  // Tone-based intro messages
-  const introMsgs={
-    zen:{emoji:'💡',msg:`Il te reste ${Math.round(remCal)} kcal. Voici quelques idées pour ${mealCtx} :`,title:'Suggestions pour toi'},
-    coach:{emoji:'🎯',msg:`${Math.round(remCal)} kcal à combler ! Choisis bien pour ${mealCtx} :`,title:'Que manger maintenant ?'},
-    sarcastique:{emoji:'🤔',msg:`Encore ${Math.round(remCal)} kcal… t'as pas encore mangé pour ${mealCtx} ?`,title:'T\'as faim, non ?'},
-    drill:{emoji:'💪',msg:`OBJECTIF : ${Math.round(remCal)} kcal restants. OPTIONS POUR ${mealCtx.toUpperCase()} :`,title:'REMPLIS TES MACROS'}
-  };
-  const intro=introMsgs[toneMode]||introMsgs.zen;
-
-  // Score food by how well it fills the macro gaps
-  function scoreFood(f){
-    const base=f.base||100;
-    // Use 1 unit for base:1, or a reasonable serving for base:100
-    const serv=base===1?1:100;
-    const factor=serv/base;
-    const fCal=(f.cal||0)*factor;
-    const fProt=(f.prot||0)*factor;
-    const fCarb=(f.carb||0)*factor;
-    const fFat=(f.fat||0)*factor;
-    if(fCal<10) return -Infinity;
-    // Avoid going over remaining calories
-    if(fCal>remCal*1.4) return -Infinity;
-    // Score: reward filling protein gap proportionally + calorie fit
-    const calFit=1-Math.abs(fCal-remCal*0.45)/(remCal+1);
-    const protScore=remProt>10?(fProt/Math.max(remProt,1)):0;
-    return calFit*0.5+protScore*0.5;
-  }
-
-  const foods=allFoods();
-  // Score and pick top candidates
-  const scored=foods.map(f=>({f,s:scoreFood(f)})).filter(x=>x.s>-Infinity);
-  scored.sort((a,b)=>b.s-a.s);
-
-  // Deduplicate by name and pick top 3
-  const seen=new Set();
-  const top=[];
-  for(const x of scored){
-    const n=x.f.name;
-    if(!seen.has(n)){ seen.add(n); top.push(x.f); }
-    if(top.length>=3) break;
-  }
-
-  if(top.length===0){ el.innerHTML=''; return; }
-
-  // Build gap pills
-  const gaps=[];
-  if(remProt>10) gaps.push(`<span class="suggest-gap-pill urgent">💪 ${Math.round(remProt)}g prot</span>`);
-  if(remCarb>20) gaps.push(`<span class="suggest-gap-pill">🍞 ${Math.round(remCarb)}g glucides</span>`);
-  if(remFat>8)  gaps.push(`<span class="suggest-gap-pill">🥑 ${Math.round(remFat)}g lipides</span>`);
-
-  // Build cards
-  const cardsHtml=top.map(f=>{
-    const base=f.base||100;
-    const serv=base===1?1:100;
-    const factor=serv/base;
-    const fCal=Math.round((f.cal||0)*factor);
-    const fProt=Math.round((f.prot||0)*factor);
-    const fCarb=Math.round((f.carb||0)*factor);
-    const servLabel=base===1?'1 unité':'100g';
-    const pctCal=Math.min(Math.round(fCal/Math.max(remCal,1)*100),100);
-    return `<div class="suggest-card" onclick="quickAddSuggestedFood('${f.name.replace(/'/g,"\\'")}')">
-      <div class="suggest-card-left">
-        <div class="suggest-card-name">${f.name}</div>
-        <div class="suggest-card-meta">${servLabel} · P:${fProt}g G:${fCarb}g L:${Math.round((f.fat||0)*factor)}g</div>
-      </div>
-      <div class="suggest-card-right">
-        <div class="suggest-card-cal">${fCal} kcal</div>
-        <div class="suggest-card-prot">${pctCal}% restant</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  el.innerHTML=`<div class="suggest-block">
-    <div class="suggest-header">
-      <div>
-        <div class="suggest-title">${intro.emoji} ${intro.title}</div>
-        <div class="suggest-subtitle">${intro.msg}</div>
-      </div>
-      <button class="suggest-refresh" onclick="renderSmartSuggest()" title="Actualiser">🔄</button>
-    </div>
-    ${gaps.length?`<div class="suggest-macro-gap">${gaps.join('')}</div>`:''}
-    <div class="suggest-cards">${cardsHtml}</div>
-  </div>`;
-}
-
-function quickAddSuggestedFood(name){
-  // Find the next meal based on hour
-  const h=new Date().getHours();
-  let mealId='breakfast';
-  if(h>=10&&h<14) mealId='lunch';
-  else if(h>=14&&h<17) mealId='snack';
-  else if(h>=17) mealId='dinner';
-  const meal=MEALS.find(m=>m.id===mealId)||MEALS[1];
-  openMealModal(meal.id, meal.name);
-  // Pre-search the suggested food
-  setTimeout(()=>{
-    const input=document.getElementById('modalSearch');
-    if(input){ input.value=name; renderModalSearchHybrid(); }
-  }, 300);
+  renderMeals(); updateStreak(); renderCalStrip(); renderHomeRecents(); updateCopyBtn();
 }
 
 function renderMeals(){
