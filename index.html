@@ -273,6 +273,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .bilan-dot.ok .bilan-dot-circle{background:var(--primary-soft);color:var(--primary-dark)}
 .bilan-dot.over .bilan-dot-circle{background:rgba(244,67,54,.12);color:var(--red)}
 .bilan-dot.low .bilan-dot-circle{background:rgba(255,152,0,.15);color:var(--orange)}
+.bilan-dot.very-low .bilan-dot-circle{background:rgba(255,87,34,.15);color:#E64A19}
 .bilan-dot.empty .bilan-dot-circle{background:var(--card2);color:var(--text2)}
 .bilan-macros{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 .bilan-macro-row{display:flex;align-items:center;gap:8px}
@@ -833,20 +834,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div id="editMealItems" style="max-height:190px;overflow-y:auto;margin-bottom:10px"></div>
     <!-- Ajouter un aliment -->
     <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px">
-      <div class="search-bar" style="margin-bottom:8px">
-        <span style="color:var(--text2)">🔍</span>
-        <input type="text" placeholder="Ajouter un aliment…" id="editMealSearch" oninput="searchEditMeal()">
-      </div>
-      <div id="editMealSearchResults" style="max-height:140px;overflow-y:auto"></div>
-      <div id="editMealPending" style="display:none;background:var(--primary-soft);border-radius:10px;padding:9px 11px;margin-top:6px">
-        <div id="editMealPendingName" style="font-size:13px;font-weight:600;color:var(--primary-dark);margin-bottom:6px"></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="number" class="form-input" id="editMealQtyInput" value="100" min="0.5" step="5" style="width:80px;flex-shrink:0" oninput="updateEditPendingPreview()">
-          <span id="editMealQtyUnit" style="font-size:12px;color:var(--text2);flex-shrink:0">g</span>
-          <span id="editMealPendingPreview" style="font-size:11px;color:var(--text2);flex:1"></span>
-          <button class="saved-add-btn" onclick="confirmAddToEditMeal()">✓ Ajouter</button>
-        </div>
-      </div>
+      <button class="btn btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px" onclick="openMealModalForEdit()">
+        ➕ Ajouter un aliment
+      </button>
     </div>
     <button class="btn btn-primary" onclick="saveEditMeal()">💾 Sauvegarder</button>
     <button class="btn btn-ghost" onclick="closeModal('editMealModal')">Annuler</button>
@@ -1595,8 +1585,8 @@ const TONE_MSGS={
     {emoji:'😌', msg:"Tu avances à ton rythme, c'est parfait."},
     {emoji:'🍃', msg:"Belle progression aujourd'hui, continue."},
     {emoji:'🌸', msg:"Tu es presque là, doucement."},
-    {emoji:'✨', msg:"Objectif atteint. Sois fier·e de toi."},
-    {emoji:'💙', msg:"Un peu au-dessus aujourd'hui. Demain est une nouvelle chance."},
+    {emoji:'✨', msg:"Objectif atteint. Sois fier·e de toi, c'est une belle journée."},
+    {emoji:'🌊', msg:"Tu as dépassé ton objectif aujourd'hui. Ce n'est pas grave — demain est une nouvelle page."},
   ],
   coach:[
     {emoji:'🏋️', msg:"Allez, c'est l'heure de performer ! Log ton premier repas !"},
@@ -1605,16 +1595,16 @@ const TONE_MSGS={
     {emoji:'🚀', msg:"Tu cartonnes ! Continue sur cette lancée, champion !"},
     {emoji:'🎯', msg:"Sprint final ! Tu touches au but, lâche rien !"},
     {emoji:'🏆', msg:"OBJECTIF ATTEINT ! Tu es une vraie machine aujourd'hui !"},
-    {emoji:'💥', msg:"Un peu dépassé, ça arrive aux meilleurs ! Demain on repart plus fort !"},
+    {emoji:'🚨', msg:"Objectif dépassé ! Ce surplus va te coûter demain. Coupe maintenant et reviens plus fort !"},
   ],
-  sarcastic:[
+  sarcastique:[
     {emoji:'😴', msg:"Tu attends que la nourriture se logue toute seule ou quoi ?"},
     {emoji:'🙄', msg:"Wow, tu as mangé. Quelqu'un appelle les journaux ?"},
     {emoji:'😏', msg:"Pas mal pour quelqu'un qui avait 'pas faim' ce matin."},
     {emoji:'🤨', msg:"OK, tu gères. Je suis… pas trop déçu en fait. Surprenant."},
     {emoji:'😒', msg:"Presque là. Tu peux y arriver, même toi. Je crois."},
     {emoji:'😤', msg:"Bien. Je suppose que tu mérites un high-five. Peut-être."},
-    {emoji:'🤦', msg:"Tu as 'juste goûté' quelques centaines de kcal de trop ? Fascinant."},
+    {emoji:'🍕', msg:"Plus de 100 kcal au-dessus ? T'as confondu l'objectif avec une suggestion ?"},
   ],
   drill:[
     {emoji:'🪖', msg:"DEBOUT SOLDAT ! Log ce repas IMMÉDIATEMENT !"},
@@ -1623,7 +1613,7 @@ const TONE_MSGS={
     {emoji:'🔥', msg:"Ça commence à ressembler à quelque chose ! Lâche absolument RIEN !"},
     {emoji:'⚡', msg:"Un sprint et c'est plié ! Finis ce que tu as commencé, MAINTENANT !"},
     {emoji:'🎖️', msg:"MISSION ACCOMPLIE ! Bien joué soldat, tu as mérité le repos !"},
-    {emoji:'😡', msg:"Objectif DÉPASSÉ ! Tu gèreras mieux demain. C'est un ORDRE !"},
+    {emoji:'💀', msg:"OBJECTIF EXPLOSÉ ! Surplus non autorisé ! Tu rembourseras ça à l'entraînement — C'EST UN ORDRE !"},
   ],
 };
 
@@ -1648,11 +1638,17 @@ function setTone(id){
 // ── MOTIVATION ──
 function getMotivation(t){
   const p=pct(t.cal,goals.cal);
+  const overKcal=Math.round(t.cal-goals.cal);
   const msgs=TONE_MSGS[toneMode]||TONE_MSGS.zen;
-  const idx=t.cal<10?0:p<25?1:p<50?2:p<75?3:p<95?4:p<=110?5:6;
+  // idx 5 = objectif atteint (95% → +100 kcal max), idx 6 = dépassement significatif (>+100 kcal)
+  const idx=t.cal<10?0:p<25?1:p<50?2:p<75?3:p<95?4:overKcal<=100?5:6;
   const m=msgs[idx];
-  const score=t.cal<10?'Score : —':p<=110?`${Math.round(p)}% de l'objectif`:`+${Math.round(p-100)}% au-dessus`;
-  return {emoji:m.emoji, msg:m.msg, score:idx===5?'Objectif atteint ✅':score};
+  let score;
+  if(t.cal<10) score='Score : —';
+  else if(idx===5) score='Objectif atteint ✅';
+  else if(idx===6) score=`+${overKcal} kcal au-dessus ⚠️`;
+  else score=`${Math.round(p)}% de l'objectif`;
+  return {emoji:m.emoji, msg:m.msg, score};
 }
 
 // ── CONFETTI ──
@@ -1735,7 +1731,8 @@ function renderCalStrip(){
     const ratio=Math.min(t.cal/Math.max(goals.cal,1),1);
     const isActive=k===currentDate;
     const isToday=off===0;
-    const fillColor=ratio>=1.05?'var(--red)':ratio>=0.85?'var(--orange)':'var(--primary)';
+    const diffKcal=t.cal-goals.cal;
+    const fillColor=t.cal<=0?'var(--border)':Math.abs(diffKcal)<=100?'var(--primary)':diffKcal>100?'var(--red)':diffKcal<-300?'#E64A19':'var(--orange)';
     const fillW=ratio>0?Math.round(ratio*100):0;
     html+=`<div class="cal-day${isActive?' active':''}${isToday&&!isActive?' is-today':''}" onclick="selectDay(${off})">
       <div class="cal-day-name">${DAY_NAMES[d.getDay()]}</div>
@@ -1784,7 +1781,8 @@ function renderToday(){
   const t=totals(currentDate);
   const remaining=Math.max(0,goals.cal-t.cal);
   const ratio=Math.min(t.cal/Math.max(goals.cal,1),1);
-  if(currentDate===dateKey(0)&&ratio>=0.95&&!goalReachedToday&&t.cal>50){
+  // Confetti uniquement quand on atteint l'objectif (pas quand on le dépasse de +100 kcal)
+  if(currentDate===dateKey(0)&&ratio>=0.95&&(t.cal-goals.cal)<=100&&!goalReachedToday&&t.cal>50){
     goalReachedToday=true; launchConfetti(); showToast('🏆 Objectif calorique atteint !');
   }
   const circ=2*Math.PI*62;
@@ -2039,6 +2037,22 @@ function confirmAdd(){
   const qty=parseFloat(document.getElementById('foodQty').value)||1;
   const r=pickedFood.base===1?qty:qty/100;
   const ql=pickedFood.base===1?`${qty} ${pickedFood.unit}`:`${qty}${pickedFood.unit||'g'}`;
+
+  // ── Mode "ajout dans un repas sauvegardé" ──
+  if(editMealAddMode){
+    editMealAddMode = false;
+    editingMealItems.push({name:pickedFood.name,qty:ql,
+      cal:Math.round(pickedFood.cal*r*10)/10,prot:Math.round(pickedFood.prot*r*10)/10,
+      carb:Math.round(pickedFood.carb*r*10)/10,fat:Math.round(pickedFood.fat*r*10)/10});
+    saveToCustomIfNew(pickedFood);
+    closeModal('mealModal');
+    renderEditMealItems();
+    document.getElementById('editMealModal').classList.add('open');
+    showToast('✅ '+pickedFood.name+' ajouté au repas');
+    return;
+  }
+
+  // ── Mode normal : ajout au journal du jour ──
   const item={meal:currentMealId,name:pickedFood.name,qty:ql,
     cal:Math.round(pickedFood.cal*r*10)/10,prot:Math.round(pickedFood.prot*r*10)/10,
     carb:Math.round(pickedFood.carb*r*10)/10,fat:Math.round(pickedFood.fat*r*10)/10};
@@ -2104,10 +2118,6 @@ function addManual(){
     fatStore=Math.round(fat/qty*1000)/10;
   }
 
-  // Ajout au journal avec les macros réelles saisies
-  getLog(currentDate).items.push({meal:currentMealId,name,qty:qtyLabel,cal:calLog,prot,carb,fat});
-  saveLogs();
-
   // Sauvegarde dans la base locale (normalisé) si inconnu
   const already=allFoods().some(f=>f.name.toLowerCase()===name.toLowerCase());
   if(!already){
@@ -2121,6 +2131,21 @@ function addManual(){
   });
   document.getElementById('mUnitType').value='g';
   updateManualUnitType();
+
+  // ── Mode "ajout dans un repas sauvegardé" ──
+  if(editMealAddMode){
+    editMealAddMode = false;
+    editingMealItems.push({name,qty:qtyLabel,cal:calLog,prot,carb,fat});
+    closeModal('mealModal');
+    renderEditMealItems();
+    document.getElementById('editMealModal').classList.add('open');
+    showToast('✅ '+name+(already?' ajouté':' ajouté et sauvegardé en base'));
+    return;
+  }
+
+  // ── Mode normal : ajout au journal ──
+  getLog(currentDate).items.push({meal:currentMealId,name,qty:qtyLabel,cal:calLog,prot,carb,fat});
+  saveLogs();
 
   closeModal('mealModal'); renderToday();
   showToast('✅ '+name+(already?' ajouté':' ajouté et sauvegardé en base'));
@@ -2379,7 +2404,7 @@ function renderSavedMeals(){
     <div class="saved-meal-row">
       <div>
         <div class="saved-meal-name">${sm.name}</div>
-        <div class="saved-meal-meta">${sm.items.length} aliment${sm.items.length>1?'s':''} · ${Math.round(sm.items.reduce((s,i)=>s+i.cal,0))} kcal</div>
+        <div class="saved-meal-meta">${sm.items.length} aliment${sm.items.length>1?'s':''} · ${Math.round(sm.items.reduce((s,i)=>s+i.cal,0))} kcal · 💪${Math.round(sm.items.reduce((s,i)=>s+(i.prot||0),0))}g · 🍞${Math.round(sm.items.reduce((s,i)=>s+(i.carb||0),0))}g · 🥑${Math.round(sm.items.reduce((s,i)=>s+(i.fat||0),0))}g</div>
       </div>
       <div style="display:flex;gap:6px;align-items:center">
         <button class="saved-add-btn" onclick="addSavedMeal(${idx})">+ Ajouter</button>
@@ -2455,13 +2480,12 @@ function deleteSavedMeal(idx){ savedMeals.splice(idx,1); saveSaved(); renderSave
 let editingMealIdx = -1;
 let editingMealItems = [];
 let editPendingFood = null;
+let editMealAddMode = false; // true = mealModal s'ajoute à editingMealItems au lieu du journal
 
 function openEditMealModal(idx){
   editingMealIdx = idx;
   editPendingFood = null;
-  document.getElementById('editMealSearch').value = '';
-  document.getElementById('editMealSearchResults').innerHTML = '';
-  document.getElementById('editMealPending').style.display = 'none';
+  editMealAddMode = false;
   if(idx === -1){
     document.getElementById('editMealTitle').textContent = '➕ Créer un repas';
     document.getElementById('editMealName').value = '';
@@ -2476,6 +2500,12 @@ function openEditMealModal(idx){
   document.getElementById('editMealModal').classList.add('open');
 }
 
+function openMealModalForEdit(){
+  editMealAddMode = true;
+  document.getElementById('editMealModal').classList.remove('open');
+  setTimeout(() => openMealModal('editMeal', 'Ajouter au repas'), 80);
+}
+
 function renderEditMealItems(){
   const c = document.getElementById('editMealItems');
   if(!editingMealItems.length){
@@ -2486,7 +2516,7 @@ function renderEditMealItems(){
     <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.name}</div>
-        <div style="font-size:11px;color:var(--text2)">${item.qty} · ${Math.round(item.cal)} kcal</div>
+        <div style="font-size:11px;color:var(--text2)">${item.qty} · ${Math.round(item.cal)} kcal · 💪${Math.round(item.prot||0)}g · 🍞${Math.round(item.carb||0)}g · 🥑${Math.round(item.fat||0)}g</div>
       </div>
       <button onclick="removeEditMealItem(${i})" style="background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;flex-shrink:0;padding:0 4px;line-height:1">×</button>
     </div>`).join('');
@@ -2499,65 +2529,6 @@ function removeEditMealItem(i){
   renderEditMealItems();
 }
 
-function searchEditMeal(){
-  editPendingFood = null;
-  document.getElementById('editMealPending').style.display = 'none';
-  const q = (document.getElementById('editMealSearch').value || '').trim().toLowerCase();
-  const c = document.getElementById('editMealSearchResults');
-  if(q.length < 2){ c.innerHTML = ''; return; }
-  const results = allFoods().filter(f => f.name.toLowerCase().includes(q)).slice(0, 10);
-  if(!results.length){ c.innerHTML = '<div style="font-size:12px;color:var(--text2);padding:6px">Aucun résultat</div>'; return; }
-  c.innerHTML = results.map(f =>
-    `<div onclick="selectEditFood('${f.name.replace(/'/g,"\\'")}',this)"
-      style="padding:8px 10px;border-radius:9px;margin-bottom:4px;cursor:pointer;background:var(--card);border:1px solid var(--border)">
-      <div style="font-size:13px;font-weight:600">${f.name}</div>
-      <div style="font-size:11px;color:var(--text2)">${f.base===1?'à l\'unité':'pour 100'+f.unit} · ${f.cal} kcal</div>
-    </div>`
-  ).join('');
-}
-
-function selectEditFood(name, el){
-  document.querySelectorAll('#editMealSearchResults > div').forEach(e => e.style.background = 'var(--card)');
-  el.style.background = 'var(--primary-soft)';
-  editPendingFood = allFoods().find(f => f.name === name);
-  if(!editPendingFood) return;
-  const isUnit = editPendingFood.base === 1;
-  document.getElementById('editMealPendingName').textContent = editPendingFood.name;
-  document.getElementById('editMealQtyInput').value = isUnit ? '1' : '100';
-  document.getElementById('editMealQtyInput').step = isUnit ? '1' : '10';
-  document.getElementById('editMealQtyUnit').textContent = isUnit ? editPendingFood.unit : editPendingFood.unit || 'g';
-  document.getElementById('editMealPending').style.display = '';
-  updateEditPendingPreview();
-}
-
-function updateEditPendingPreview(){
-  if(!editPendingFood) return;
-  const qty = parseFloat(document.getElementById('editMealQtyInput').value) || 0;
-  const r = editPendingFood.base === 1 ? qty : qty / 100;
-  document.getElementById('editMealPendingPreview').textContent =
-    `🔥 ${Math.round(editPendingFood.cal*r)} kcal · 💪${Math.round(editPendingFood.prot*r)}g · 🍞${Math.round(editPendingFood.carb*r)}g · 🥑${Math.round(editPendingFood.fat*r)}g`;
-}
-
-function confirmAddToEditMeal(){
-  if(!editPendingFood) return;
-  const qty = parseFloat(document.getElementById('editMealQtyInput').value) || 1;
-  const r = editPendingFood.base === 1 ? qty : qty / 100;
-  const unit = editPendingFood.unit || 'g';
-  const qtyLabel = editPendingFood.base === 1 ? `${qty} ${unit}` : `${qty}${unit}`;
-  editingMealItems.push({
-    name: editPendingFood.name,
-    qty: qtyLabel,
-    cal:  Math.round(editPendingFood.cal  * r * 10) / 10,
-    prot: Math.round(editPendingFood.prot * r * 10) / 10,
-    carb: Math.round(editPendingFood.carb * r * 10) / 10,
-    fat:  Math.round(editPendingFood.fat  * r * 10) / 10,
-  });
-  editPendingFood = null;
-  document.getElementById('editMealPending').style.display = 'none';
-  document.getElementById('editMealSearch').value = '';
-  document.getElementById('editMealSearchResults').innerHTML = '';
-  renderEditMealItems();
-}
 
 function saveEditMeal(){
   const name = document.getElementById('editMealName').value.trim();
@@ -2758,11 +2729,13 @@ function renderWeeklyBilan(){
   const dotsHtml=data7.map(d=>{
     const date=new Date(d.k+'T12:00');
     const dayName=DAY_SHORT[date.getDay()];
-    const ratio=d.t.cal/Math.max(goals.cal,1);
+    const diffKcal=d.t.cal-goals.cal;
     let cls='empty'; let icon='—';
     if(d.t.cal>50){
-      icon=ratio<=1.1?'✓':'!';
-      cls=ratio>=0.8&&ratio<=1.1?'ok':ratio>1.1?'over':'low';
+      const inTarget=Math.abs(diffKcal)<=100;
+      const veryLow=diffKcal<-300;
+      icon=inTarget?'✓':diffKcal>100?'!':veryLow?'⬇':'↓';
+      cls=inTarget?'ok':diffKcal>100?'over':veryLow?'very-low':'low';
     }
     return `<div class="bilan-dot ${cls}">
       <div class="bilan-dot-circle">${icon}</div>
@@ -2876,7 +2849,7 @@ function renderHistory(){
   const ctxC=document.getElementById('chartCal').getContext('2d');
   if(chartCal) chartCal.destroy();
   chartCal=new Chart(ctxC,{type:'bar',data:{labels,datasets:[
-    {label:'Calories',data:calData,backgroundColor:calData.map(v=>v>=goals.cal?'rgba(244,67,54,.7)':v>0?'rgba(76,175,80,.75)':'rgba(200,200,200,.3)'),borderRadius:6,borderSkipped:false},
+    {label:'Calories',data:calData,backgroundColor:calData.map(v=>v<=0?'rgba(200,200,200,.3)':Math.abs(v-goals.cal)<=100?'rgba(76,175,80,.75)':v-goals.cal>100?'rgba(244,67,54,.7)':(goals.cal-v)>300?'rgba(255,87,34,.7)':'rgba(255,152,0,.7)'),borderRadius:6,borderSkipped:false},
     {label:'Objectif',data:Array(histPeriod).fill(goals.cal),type:'line',borderColor:'rgba(255,152,0,.8)',borderDash:[4,4],borderWidth:2,pointRadius:0,fill:false},
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
     scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:11}}},x:{grid:{display:false},ticks:{maxTicksLimit:7,font:{size:11}}}}}});
@@ -2894,11 +2867,13 @@ function renderHistory(){
 
   const avgCal=daysWithData.length?Math.round(daysWithData.reduce((a,b)=>a+b,0)/daysWithData.length):0;
   const maxCal=Math.max(...calData,0);
-  const daysOk=calData.filter(v=>v>=goals.cal*0.8&&v<=goals.cal*1.1).length;
+  const daysOk=calData.filter(v=>v>50&&Math.abs(v-goals.cal)<=100).length;
+  const daysVeryLow=calData.filter(v=>v>50&&(goals.cal-v)>300).length;
   const streak=calcStreak();
   let insight='';
   if(daysWithData.length===0) insight='Commence à logger tes repas pour voir tes insights !';
   else if(daysOk>=histPeriod*0.7) insight=`💪 Tu respectes ton objectif ${daysOk}/${histPeriod} jours.`;
+  else if(daysVeryLow>=2) insight=`🚨 ${daysVeryLow} jour${daysVeryLow>1?'s':''} avec un déficit > 300 kcal — sous-manger nuit à ta récupération et ta masse musculaire.`;
   else if(avgCal>goals.cal*1.1) insight=`⚠️ Tu es en moyenne ${Math.round(avgCal-goals.cal)} kcal au-dessus de ton objectif.`;
   else if(avgCal<goals.cal*0.7) insight=`📉 Tu manges en moyenne ${Math.round(goals.cal-avgCal)} kcal en dessous — pense à manger suffisamment.`;
   else if(aP<goals.prot*0.7) insight=`🥩 Protéines faibles (moy. ${aP}g / objectif ${goals.prot}g). Ajoute viande, œufs ou whey.`;
